@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/jpeg" href="/favicon.jpeg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting to LocalShore</title>
+  <meta name="robots" content="noindex">
+  <meta http-equiv="refresh" content="0; url=home.html">
+  <script>
+    (function () {
+      var target = "home.html" + window.location.search + window.location.hash;
+      window.location.replace(target);
+    })();
+  </script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f8fc;
+      color: #132e67;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .msg {
+      max-width: 420px;
+      line-height: 1.6;
+    }
+    a {
+      color: #ff6b1a;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    Redirecting to LocalShore...
+    <br>
+    <a href="home.html">Continue to home</a>
+  </div>
+</body>
+</html>
