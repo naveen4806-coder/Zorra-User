@@ -2541,7 +2541,7 @@ function renderOffers(offers){
   track.innerHTML=offers.map(function(o){
     var shopClick=o.shopId?'onclick="openShopModal(\''+o.shopId+'\')"':'';
     var priceHtml=o.price?
-      '<div class="oc-price-row"><span class="oc-price">â‚¹'+o.price+'</span>'+(o.originalPrice?'<span class="oc-orig">â‚¹'+o.originalPrice+'</span>':'')+'</div>':'';
+      '<div class="oc-price-row"><span class="oc-price">&#8377;'+o.price+'</span>'+(o.originalPrice?'<span class="oc-orig">&#8377;'+o.originalPrice+'</span>':'')+'</div>':'';
 
     // Image area: if we have an image URL, show it at natural size
     // The image sets the card width/height naturally via CSS (width:100%, height:auto)
@@ -3346,7 +3346,7 @@ function renderNewProducts(){
         '<div class="np-shop"><span class="np-shop-chip">'+t('shop_chip')+'</span><span class="np-shop-name">'+eh(shopName)+'</span></div>'+
         '<div class="np-name">'+eh(p.name||t('new_arrival'))+'</div>'+
         '<div class="np-meta">'+eh(category)+(shop&&shop.category?' Â· '+eh(shop.category):'')+'</div>'+
-        '<div class="np-foot"><div class="np-price">â‚¹'+(p.price||0)+'</div><a class="np-link" href="product.html?id='+p.id+'">'+t('view_cta')+'</a></div>'+
+        '<div class="np-foot"><div class="np-price">&#8377;'+(p.price||0)+'</div><a class="np-link" href="product.html?id='+p.id+'">'+t('view_cta')+'</a></div>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -3378,7 +3378,7 @@ function renderNearbyProductsPanel(){
         '<div class="np-shop"><span class="np-shop-chip">'+eh(shop.name||t('shop_chip'))+'</span><span class="np-shop-name">'+eh(shop.category||category)+'</span></div>'+
         '<div class="np-name">'+eh(p.name||t('new_arrival'))+'</div>'+
         '<div class="np-meta">'+eh(category)+(shop.address?' · '+eh(shop.address.split(',').slice(-2).join(',').trim()):'')+'</div>'+
-        '<div class="np-foot"><div class="np-price">₹'+(p.price||0)+'</div><a class="np-link" href="product.html?id='+p.id+'">'+t('view_cta')+'</a></div>'+
+        '<div class="np-foot"><div class="np-price">&#8377;'+(p.price||0)+'</div><a class="np-link" href="product.html?id='+p.id+'">'+t('view_cta')+'</a></div>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -3468,7 +3468,7 @@ function openWishModal(){
   if(!isLoggedIn())return requireLogin('Please sign in to view your wishlist.');
   var wish=ldJ('ls_wishlist');var body=document.getElementById('wish-body');
   if(!wish.length){body.innerHTML='<div style="text-align:center;padding:48px"><div style="font-size:2.8rem;margin-bottom:10px">ðŸ¤</div><div style="font-family:var(--ff);font-weight:700;font-size:.95rem;margin-bottom:5px">'+t('wishlist_empty_title')+'</div><div style="font-size:.83rem;color:var(--mid)">'+t('wishlist_empty_sub')+'</div></div>';}
-  else{body.innerHTML=wish.map(function(w){return'<div class="wish-card"><div class="wish-ph">'+prodIco(w.category)+'</div><div class="wish-info"><div class="wish-name">'+eh(w.name)+'</div><div class="wish-shop">'+eh(w.shopName)+'</div><div class="wish-price">â‚¹'+w.price+'</div></div><button class="btn-wish-order" onclick="closeWishModal();goToShopPage(\''+w.shopId+'\')">'+t('open_shop')+'</button><button class="btn-wish-rm" onclick="toggleWish(\''+w.id+'\',\''+w.shopId+'\');openWishModal()">'+t('remove')+'</button></div>';}).join('');}
+  else{body.innerHTML=wish.map(function(w){return'<div class="wish-card"><div class="wish-ph">'+prodIco(w.category)+'</div><div class="wish-info"><div class="wish-name">'+eh(w.name)+'</div><div class="wish-shop">'+eh(w.shopName)+'</div><div class="wish-price">&#8377;'+w.price+'</div></div><button class="btn-wish-order" onclick="closeWishModal();goToShopPage(\''+w.shopId+'\')">'+t('open_shop')+'</button><button class="btn-wish-rm" onclick="toggleWish(\''+w.id+'\',\''+w.shopId+'\');openWishModal()">'+t('remove')+'</button></div>';}).join('');}
   document.getElementById('wish-modal').classList.add('open');document.body.style.overflow='hidden';
 }
 function closeWishModal(){document.getElementById('wish-modal').classList.remove('open');document.body.style.overflow='';}
@@ -3636,7 +3636,7 @@ function renderOrdersModal(){
       +(canCancelOrder(o)?'<button class="btn-cancel-order" onclick="cancelOrder(\''+o.id+'\')">Cancel</button>':'')
       +'</div></div><div class="order-addr">'+eh(o.deliveryAddress||'Delivery address will appear here')+'</div>'
       +renderOrderItemsList(o)
-      +'<div class="order-meta"><span class="order-price">â‚¹'+o.total+'</span><span class="status-pill '+statusMeta.cls+'">'+statusMeta.label+'</span><span class="order-ref">#'+o.id.slice(-8)+'</span></div><div class="order-time">'+new Date(o.orderedAt).toLocaleString()+' Â· '+(o.paymentLabel||'Cash on Delivery')+'</div>'+cb(o)+'</div></div>';
+      +'<div class="order-meta"><span class="order-price">&#8377;'+o.total+'</span><span class="status-pill '+statusMeta.cls+'">'+statusMeta.label+'</span><span class="order-ref">#'+o.id.slice(-8)+'</span></div><div class="order-time">'+new Date(o.orderedAt).toLocaleString()+' - '+(o.paymentLabel||'Cash on Delivery')+'</div>'+cb(o)+'</div></div>';
   }).join('')+'</div>':'<div class="order-empty"><div class="order-empty-icon">ðŸ§¾</div><div class="order-empty-title">No orders in this filter</div><div class="order-empty-sub">Try another filter to see your order history.</div></div>')
     +'</div>';
 }
