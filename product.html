@@ -522,6 +522,7 @@ body{background:radial-gradient(circle at 8% 10%,rgba(237,18,36,.08),transparent
 .main-img-wrap,.action-bar,.shop-info-card,.rating-overview,.review-form,.rp-card,.modal,.delivery-card,.price-block,.specs-grid{border-color:rgba(237,18,36,.14)!important}.prod-name-big,.price-main,.section-title,.rr-header-title{color:#111!important}.shop-chip,.cat-chip,.rp-shop{color:#ED1224!important}.trust-icon,.delivery-icon{color:#ED1224!important}.breadcrumb a:hover{color:#ED1224!important}
 @media(max-width:560px){.logo{width:150px!important;height:42px!important;padding:4px 7px!important}.brand-speed{display:none}.brand-word{font-size:1.08rem}}
 </style>
+<link rel="stylesheet" href="nexcart-notifications.css">
 </head>
 <body>
 
@@ -925,6 +926,7 @@ function sv(k,v){try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify
 function ld(k,def){try{var v=localStorage.getItem(k);return v!==null?v:(def||'');}catch(e){return def||'';}}
 function ldJ(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):(def||[]);}catch(e){return def||[];}}
 function eh(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function distanceKm(la1,ln1,la2,ln2){var R=6371,dLat=(la2-la1)*Math.PI/180,dLng=(ln2-ln1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 function getDeviceId(){var id=localStorage.getItem('ls_device_id');if(!id){id='dev_'+Math.random().toString(36).slice(2)+Date.now();localStorage.setItem('ls_device_id',id);}return id;}
 var DEVICE_ID=getDeviceId();
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast-pop show'+(t?' '+t:'');clearTimeout(toast._t);toast._t=setTimeout(function(){e.className='toast-pop';},3200);}
@@ -1275,7 +1277,10 @@ function confirmOrder(){
   var payMethod='cod';
   sv('ls_del_addr1',addr1);sv('ls_del_city',city);sv('ls_del_pin',pin);sv('ls_del_land',landmark);sv('ls_del_phone',phone);
   var p=_pendingOrder.product,s=_pendingOrder.shop,qty=_pendingOrder.qty;
-  var order={deviceId:DEVICE_ID,type:'single',productId:p.id,shopId:p.shopId,productName:p.name,category:p.category,image:p.image||'',price:p.price,qty:qty,total:p.price*qty,shopName:s.name,shopAddress:s.address||'',shopLat:s.lat||null,shopLng:s.lng||null,deliveryAddress:fullAddr,deliveryLat:parseFloat(ld('ls_lat'))||null,deliveryLng:parseFloat(ld('ls_lng'))||null,phone:phone,paymentMethod:payMethod,paymentLabel:'Cash on Delivery',status:'Confirmed',customerConfirmed:null,orderedAt:new Date().toISOString()};
+  var userLat=parseFloat(ld('ls_lat')),userLng=parseFloat(ld('ls_lng')),shopLat=parseFloat(s.lat),shopLng=parseFloat(s.lng);
+  if(!isFinite(userLat)||!isFinite(userLng)){toast('Please set your delivery location on the Home page before ordering.','err');return;}
+  if(isFinite(shopLat)&&isFinite(shopLng)&&distanceKm(userLat,userLng,shopLat,shopLng)>7){toast('This shop is outside the 7 km delivery area.','err');return;}
+  var order={deviceId:DEVICE_ID,customerUid:auth.currentUser?auth.currentUser.uid:'',vendorUid:s.ownerUid||s.vendorUid||s.id,type:'single',productId:p.id,shopId:p.shopId,productName:p.name,category:p.category,image:p.image||'',price:p.price,qty:qty,total:p.price*qty,shopName:s.name,shopAddress:s.address||'',shopLat:s.lat||null,shopLng:s.lng||null,deliveryAddress:fullAddr,deliveryLat:parseFloat(ld('ls_lat'))||null,deliveryLng:parseFloat(ld('ls_lng'))||null,phone:phone,paymentMethod:payMethod,paymentLabel:'Cash on Delivery',status:'Confirmed',customerConfirmed:null,orderedAt:new Date().toISOString()};
   db.collection('orders').add(order).then(function(){
     closeDeliveryModal();toast(payMethod==='cod'?' Order placed! Pay '+order.total+' cash on delivery':' Order placed! Payment link sent via SMS');_pendingOrder=null;
   }).catch(function(e){toast('Order failed: '+e.message,'err');});
@@ -1753,6 +1758,7 @@ window.addEventListener('scroll',function(){
   if(window.scrollY>300)document.getElementById('cart-nav-pill').classList.add('show');
 });
 </script>
+<script src="nexcart-notifications.js"></script>
 </body>
 </html>
 
