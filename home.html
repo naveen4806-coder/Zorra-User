@@ -1513,6 +1513,7 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
 .quick-category-card.qc-image-failed::before{content:attr(data-fallback);position:absolute;z-index:0;right:30px;top:50%;transform:translateY(-50%);font-size:5rem;line-height:1;filter:drop-shadow(0 10px 12px rgba(0,0,0,.14))}
 .quick-category-card .qc-category-art{position:absolute;z-index:0;right:8px;bottom:0;width:58%;height:96%;filter:drop-shadow(0 12px 14px rgba(95,48,0,.18));pointer-events:none}
 </style>
+<link rel="stylesheet" href="nexcart-notifications.css">
 </head>
 <body>
 
@@ -2010,7 +2011,8 @@ function ldJ(k,def){def=def===undefined?[]:def;try{var v=localStorage.getItem(k)
 function eh(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast-pop show'+(t?' '+t:'');clearTimeout(toast._t);toast._t=setTimeout(function(){e.className='toast-pop';},3200);}
 function haversine(la1,ln1,la2,ln2){var R=6371,dLat=(la2-la1)*Math.PI/180,dLng=(ln2-ln1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-var _firebaseUser = null;  auth.onAuthStateChanged(function(user) {   _firebaseUser = user;   loadCurrentUser();   updateNavBadges();   updateCartUI(); });  function isLoggedIn(){   return !!_firebaseUser; }
+var _firebaseUser = null;  auth.onAuthStateChanged(function(user) {   _firebaseUser = user; if(user)ensureCustomerProfile(user); loadCurrentUser(); updateNavBadges(); updateCartUI(); });  function isLoggedIn(){ return !!_firebaseUser; }
+function ensureCustomerProfile(user){var ref=db.collection('users').doc(user.uid);ref.get().then(function(snap){if(snap.exists)return;var saved=ldJ('ls_user_data',{});return ref.set({uid:user.uid,name:saved.name||user.displayName||'',email:user.email||saved.email||'',phoneNumber:saved.phone||'',addresses:[],rewardPoints:0,totalOrders:0,createdAt:new Date().toISOString(),lastLogin:new Date().toISOString()});}).catch(function(e){console.warn('Customer profile setup:',e.message);});}
 function getCurrentPathWithQuery(){return (window.location.pathname.split('/').pop()||'home.html')+window.location.search+window.location.hash;}
 function buildAuthUrl(tab){var current=getCurrentPathWithQuery();return 'home.html?auth='+(tab||'login')+'&return='+encodeURIComponent(current);}
 function syncAuthQuery(tab){try{var url=new URL(window.location.href);if(tab)url.searchParams.set('auth',tab);else url.searchParams.delete('auth');url.searchParams.delete('return');history.replaceState({},'',url.pathname+url.search+url.hash);}catch(e){}}
@@ -3512,8 +3514,8 @@ function detectDeliveryLoc(){
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+delLat+'&lon='+delLng).then(function(r){return r.json();}).then(function(data){var a=data.address||{};document.getElementById('del-city').value=a.city||a.town||a.village||'';document.getElementById('del-pin').value=a.postcode||'';document.getElementById('del-addr1').value=a.road||a.suburb||'';toast('Location detected');}).catch(function(){toast('Location set');});
   },function(){toast('Location denied','err');});
 }
-function confirmOrder(){
-  if(!isLoggedIn())return requireLogin('Please sign in to place your order.');
+async function confirmOrder(){
+  if(!auth.currentUser)return requireLogin('Please sign in again to place your order.');
   if(!_pendingOrder)return;
   var addr1=document.getElementById('del-addr1').value.trim(),city=document.getElementById('del-city').value.trim(),pin=document.getElementById('del-pin').value.trim(),phone=document.getElementById('del-phone').value.trim();
   if(!addr1||!city||!pin||!phone){toast('Please fill all required fields','err');return;}
@@ -3528,8 +3530,10 @@ function confirmOrder(){
   if(isFinite(shopLat)&&isFinite(shopLng)&&haversine(delLat,delLng,shopLat,shopLng)>7){toast('This shop is outside the 7 km delivery area.','err');return;}
   var total=cart.items.reduce(function(s,i){return s+i.price*i.qty;},0);var itemCount=cart.items.reduce(function(s,i){return s+i.qty;},0);
   order={deviceId:DEVICE_ID,customerUid:auth.currentUser?auth.currentUser.uid:'',vendorUid:shop.ownerUid||shop.vendorUid||shop.id,type:'cart',shopId:cart.shopId,shopName:shop.name,shopAddress:shop.address||'',shopPhone:shop.phone||'',shopHours:shop.hours||'',shopLat:shop.lat||null,shopLng:shop.lng||null,items:cart.items.map(function(i){return{productId:i.productId,name:i.name,price:i.price,qty:i.qty,image:i.image||'',category:i.category};}),productName:cart.items.length===1?cart.items[0].name:cart.items.length+' items from '+shop.name,category:cart.items[0].category,image:cart.items[0].image||'',price:cart.items[0].price,qty:itemCount,total:total,deliveryAddress:fullAddr,deliveryLat:delLat,deliveryLng:delLng,phone:phone,paymentMethod:paymentMethod,paymentLabel:'Cash on Delivery',status:'Confirmed',customerConfirmed:null,orderedAt:new Date().toISOString()};
-  _cart={shopId:null,shopName:'',items:[]};updateCartUI();
-  db.collection('orders').add(order).then(function(){closeDeliveryModal();updateNavBadges();toast('Order placed! Pay â‚¹'+order.total+' cash on delivery');_pendingOrder=null;}).catch(function(e){toast('Order failed: '+e.message,'err');});
+  var btn=document.getElementById('btn-confirm-order');btn.disabled=true;btn.textContent='Placing Order...';
+  try{await auth.currentUser.getIdToken(true);order.customerUid=auth.currentUser.uid;order.paymentStatus='Pending';order.createdAt=order.orderedAt;order.updatedAt=order.orderedAt;await db.collection('orders').add(order);_cart={shopId:null,shopName:'',items:[]};updateCartUI();closeDeliveryModal();updateNavBadges();toast('Order placed successfully');_pendingOrder=null;}
+  catch(e){console.error('Order create failed',e);toast(e&&e.code==='permission-denied'?'Permission denied. Sign out, sign in again, and publish the latest Firestore rules.':'Order failed: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Confirm & Place Order';}
 }
 
 // ====== MY ORDERS ======
@@ -3599,7 +3603,7 @@ function openOrdersModal(){
   if(!isLoggedIn())return requireLogin('Please sign in to view your orders.');
   var body=document.getElementById('orders-body');body.innerHTML='<div style="text-align:center;padding:32px;color:var(--mid)">Loading ordersâ€¦</div>';
   document.getElementById('orders-modal').classList.add('open');document.body.style.overflow='hidden';
-  db.collection('orders').where('deviceId','==',DEVICE_ID).get().then(function(snap){
+  db.collection('orders').where('customerUid','==',auth.currentUser.uid).get().then(function(snap){
     var orders=[];snap.forEach(function(d){orders.push(Object.assign({id:d.id},d.data()));});
     orders.sort(function(a,b){return new Date(b.orderedAt)-new Date(a.orderedAt);});_ordersCache=orders;renderOrdersModal();
   }).catch(function(e){body.innerHTML='<div style="text-align:center;padding:32px"><div style="font-weight:700">Could not load orders</div><div style="font-size:.82rem;color:var(--mid);margin-top:4px">'+e.message+'</div></div>';});
@@ -3646,7 +3650,8 @@ function updateNavBadges(){
     if(wb)wb.classList.remove('show');
     if(wbm)wbm.classList.remove('show');
   }
-  db.collection('orders').where('deviceId','==',DEVICE_ID).get().then(function(snap){
+  if(!auth.currentUser)return;
+  db.collection('orders').where('customerUid','==',auth.currentUser.uid).get().then(function(snap){
     var ob=document.getElementById('orders-count-badge'),obm=document.getElementById('orders-count-badge-mobile');
     var confirmed=snap.docs.filter(function(d){var s=d.data().status;return s!=='Cancelled'&&s!=='Delivered';}).length;
     if(confirmed){
@@ -3821,5 +3826,6 @@ window.addEventListener('load',function(){
   window.addEventListener('scroll',function(){var nav=document.querySelector('nav');if(window.scrollY>20){nav.style.boxShadow='0 8px 40px rgba(0,0,0,.15),0 1px 0 rgba(255,255,255,.8) inset';}else{nav.style.boxShadow='0 4px 32px rgba(0,0,0,.1),0 1px 0 rgba(255,255,255,.8) inset,0 0 0 1px rgba(255,107,26,.06)';}});
 });
 </script>
+<script src="nexcart-notifications.js"></script>
 </body>
 </html>
