@@ -739,6 +739,20 @@ box-shadow:0 18px 34px rgba(16,24,40,.08),inset 0 1px 0 rgba(255,255,255,.7)}
 .mm-ico svg{width:16px;height:16px;stroke:var(--orange);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .mm-title h3{font-family:var(--ff);font-size:.97rem;font-weight:900;color:var(--black)}
 .mm-title p{font-size:.7rem;color:var(--mid);margin-top:1px}
+.mm-search-wrap{position:relative;padding:14px 18px;background:#fff;border-bottom:1px solid var(--border)}
+.mm-search{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border:1.5px solid #E2E5EB;border-radius:14px;background:#F8F9FC;transition:border-color .18s,box-shadow .18s}
+.mm-search:focus-within{border-color:#E53935;box-shadow:0 0 0 4px rgba(229,57,53,.09);background:#fff}
+.mm-search svg{width:18px;height:18px;stroke:#7A8190;fill:none;stroke-width:2;flex:0 0 auto}
+.mm-search input{width:100%;min-width:0;padding:10px 0;border:0;outline:0;background:transparent;font-family:var(--fb);font-size:.87rem;color:#121212}
+.mm-search button{padding:10px 17px;border:0;border-radius:10px;background:#121212;color:#fff;font-family:var(--fb);font-size:.76rem;font-weight:800;cursor:pointer}
+.mm-search button:disabled{opacity:.58;cursor:wait}
+.mm-results{position:absolute;z-index:1200;left:18px;right:18px;top:68px;display:none;max-height:255px;overflow-y:auto;padding:6px;border:1px solid #E2E5EB;border-radius:14px;background:#fff;box-shadow:0 18px 45px rgba(18,18,18,.16)}
+.mm-results.show{display:block}
+.mm-result{display:flex;width:100%;align-items:flex-start;gap:10px;padding:11px 12px;border:0;border-radius:10px;background:#fff;text-align:left;cursor:pointer;color:#121212}
+.mm-result:hover,.mm-result:focus-visible{background:#FFF1F1;outline:0}
+.mm-result-pin{display:grid;place-items:center;width:26px;height:26px;flex:0 0 auto;border-radius:8px;background:#FFE5E5;color:#E53935;font-weight:900}
+.mm-result-copy{min-width:0;font-size:.76rem;line-height:1.45}.mm-result-copy strong{display:block;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mm-result-copy small{display:block;color:#6F7582;margin-top:2px}
+.mm-search-status{padding:10px 12px;font-size:.76rem;color:#6F7582;text-align:center}
 #loc-map{height:360px;width:100%}
 .mm-footer{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:9px}
 .mm-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -750,6 +764,10 @@ box-shadow:0 18px 34px rgba(16,24,40,.08),inset 0 1px 0 rgba(255,255,255,.7)}
 .btn-locate-mm svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .btn-locate-mm:hover{background:var(--orange-dark)}
 .btn-locate-mm:disabled{opacity:.6;cursor:not-allowed}
+.mm-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.btn-set-location{display:flex;align-items:center;justify-content:center;padding:9px 18px;border:0;border-radius:10px;background:#E53935;color:#fff;font-family:var(--fb);font-size:.78rem;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(229,57,53,.18)}
+.btn-set-location:hover{background:#C62828}.btn-set-location:disabled{background:#CDD1D8;color:#717784;box-shadow:none;cursor:not-allowed}
+@media(max-width:600px){#map-modal .modal{width:calc(100% - 18px);max-height:94vh}.mm-hdr{padding:14px}.mm-search-wrap{padding:10px}.mm-results{left:10px;right:10px;top:63px}.mm-search button{padding:9px 12px}#loc-map{height:42vh;min-height:280px}.mm-footer{padding:11px;align-items:stretch}.mm-legend{width:100%}.mm-actions{width:100%;margin-left:0}.btn-locate-mm,.btn-set-location{flex:1;justify-content:center;padding:11px 8px}}
 
 /* TRACK MODAL */
 #track-modal .modal{max-width:760px;max-height:92vh;display:flex;flex-direction:column}
@@ -1972,8 +1990,12 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
 <div class="overlay" id="map-modal" onclick="if(event.target===this)closeMapModal()">
   <div class="modal" style="max-width:660px">
     <div class="mm-hdr"><div class="mm-title"><div class="mm-ico"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><div><h3>Delivery Location</h3><p>We show shops within 7 km of you</p></div></div><button class="modal-close" onclick="closeMapModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="mm-search-wrap">
+      <form class="mm-search" onsubmit="searchMainLocation(event)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><input id="loc-search-input" type="search" autocomplete="off" placeholder="Search area, street, landmark or pincode" aria-label="Search delivery location" oninput="queueLocationSearch()"><button id="loc-search-btn" type="submit">Search</button></form>
+      <div class="mm-results" id="loc-search-results" role="listbox" aria-label="Location search results"></div>
+    </div>
     <div id="loc-map"></div>
-    <div class="mm-footer"><div class="mm-legend"><div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--orange)"></div>Your location</div><div class="mm-leg-item"><div class="mm-leg-dot" style="background:rgba(255,107,26,.3);border:1.5px solid var(--orange)"></div>7 km zone</div><div class="mm-addr" id="mm-addr"><span id="mm-addr-txt"></span></div></div><button class="btn-locate-mm" id="loc-detect-btn" onclick="detectMainLoc()"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Detect My Location</button></div>
+    <div class="mm-footer"><div class="mm-legend"><div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--orange)"></div>Selected location</div><div class="mm-leg-item"><div class="mm-leg-dot" style="background:rgba(255,107,26,.3);border:1.5px solid var(--orange)"></div>7 km zone</div><div class="mm-addr" id="mm-addr"><span id="mm-addr-txt"></span></div></div><div class="mm-actions"><button class="btn-locate-mm" id="loc-detect-btn" onclick="detectMainLoc()"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Use GPS</button><button class="btn-set-location" id="loc-set-btn" type="button" onclick="commitMainLocation()" disabled>Set This Location</button></div></div>
   </div>
 </div>
 
@@ -2219,7 +2241,7 @@ function cleanBrokenSymbols(root){
 }
 var _userLat=parseFloat(ld('ls_lat'))||null,_userLng=parseFloat(ld('ls_lng'))||null;
 var _pendingOrder=null;
-var mainMap=null,mainMarker=null,mainCircle=null,mainMapInit=false;
+var mainMap=null,mainMarker=null,mainCircle=null,mainMapInit=false,mainPendingLocation=null,mainLocationResults=[],mainLocationSearchTimer=null,mainLocationSearchController=null;
 var delMap=null,delMarker=null,delLat=null,delLng=null,delMapInit=false;
 var trackMap=null,trackMapInit=false,trackDeliveryMarker=null,trackUserMarker=null,trackPolyline=null;
 var _trackInterval=null,_trackOrder=null,_confirmOrderId=null;
@@ -3915,6 +3937,66 @@ function detectMainLoc(silent){
       btn.disabled=false;btn.innerHTML=t('location_set');
     }).catch(function(){document.getElementById('loc-btn-txt').textContent=t('location_set');document.getElementById('loc-pill').classList.add('show');btn.disabled=false;btn.innerHTML=t('location_set');});
   },function(err){btn.disabled=false;btn.innerHTML=t('location');if(!silent)toast(['','Permission denied','Unavailable','Timed out'][err.code]||'Error','err');},{enableHighAccuracy:true,timeout:10000});
+}
+// Location picker: search, map pin, draggable marker, GPS and explicit save.
+function openMapModal(){
+  document.getElementById('map-modal').classList.add('open');document.body.style.overflow='hidden';
+  setTimeout(function(){
+    if(!mainMapInit){
+      mainMapInit=true;mainMap=L.map('loc-map').setView([_userLat||11.0168,_userLng||76.9558],_userLat?15:12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mainMap);
+      mainMap.on('click',function(e){previewMainLocation(e.latlng.lat,e.latlng.lng,'Selected pin');reverseMainLocation(e.latlng.lat,e.latlng.lng);});
+    }
+    mainMap.invalidateSize();
+    if(_userLat&&_userLng){previewMainLocation(_userLat,_userLng,ld('ls_detected_full')||'Saved location',ld('ls_det_city'),ld('ls_det_pin'));mainMap.setView([_userLat,_userLng],15);}
+    setTimeout(function(){var input=document.getElementById('loc-search-input');if(input)input.focus();},100);
+  },80);
+}
+function closeMapModal(){document.getElementById('map-modal').classList.remove('open');document.body.style.overflow='';hideLocationResults();if(mainLocationSearchController)mainLocationSearchController.abort();}
+function locationAddressParts(address,displayName){address=address||{};var city=address.city||address.town||address.village||address.county||'';var parts=[address.road||address.neighbourhood||address.suburb,city,address.state].filter(Boolean);return{address:parts.length?parts.join(', '):(displayName||''),city:city,pin:address.postcode||''};}
+function previewMainLocation(lat,lng,address,city,pin){
+  lat=Number(lat);lng=Number(lng);if(!isFinite(lat)||!isFinite(lng)||!mainMap)return;
+  if(mainMarker)mainMap.removeLayer(mainMarker);if(mainCircle)mainMap.removeLayer(mainCircle);
+  mainMarker=L.marker([lat,lng],{icon:makeOrangeIcon(),draggable:true}).addTo(mainMap).bindPopup('<b>Delivery location</b>').openPopup();
+  mainMarker.on('dragend',function(e){var p=e.target.getLatLng();previewMainLocation(p.lat,p.lng,'Selected pin');reverseMainLocation(p.lat,p.lng);});
+  mainCircle=L.circle([lat,lng],{radius:7000,color:'#E53935',weight:1.5,fillColor:'#E53935',fillOpacity:.06,dashArray:'6 4'}).addTo(mainMap);
+  mainPendingLocation={lat:lat,lng:lng,address:address||lat.toFixed(5)+', '+lng.toFixed(5),city:city||'',pin:pin||''};
+  document.getElementById('mm-addr-txt').textContent=mainPendingLocation.address;document.getElementById('mm-addr').classList.add('show');document.getElementById('loc-set-btn').disabled=false;
+}
+function reverseMainLocation(lat,lng){
+  fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lng),{headers:{Accept:'application/json'}})
+    .then(function(r){if(!r.ok)throw new Error('Address lookup failed');return r.json();})
+    .then(function(data){var p=locationAddressParts(data.address,data.display_name);if(mainPendingLocation&&Math.abs(mainPendingLocation.lat-lat)<.00001&&Math.abs(mainPendingLocation.lng-lng)<.00001){mainPendingLocation.address=p.address||mainPendingLocation.address;mainPendingLocation.city=p.city;mainPendingLocation.pin=p.pin;document.getElementById('mm-addr-txt').textContent=mainPendingLocation.address;}})
+    .catch(function(){});
+}
+function queueLocationSearch(){clearTimeout(mainLocationSearchTimer);var query=(document.getElementById('loc-search-input').value||'').trim();if(query.length<3){hideLocationResults();return;}mainLocationSearchTimer=setTimeout(function(){searchMainLocation();},450);}
+function searchMainLocation(event){
+  if(event)event.preventDefault();var input=document.getElementById('loc-search-input'),query=(input.value||'').trim(),button=document.getElementById('loc-search-btn'),results=document.getElementById('loc-search-results');
+  if(query.length<3){toast('Enter at least 3 characters to search','err');input.focus();return false;}
+  if(mainLocationSearchController)mainLocationSearchController.abort();mainLocationSearchController=new AbortController();button.disabled=true;button.textContent='Searching';results.classList.add('show');results.innerHTML='<div class="mm-search-status">Searching locations...</div>';
+  fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=in&q='+encodeURIComponent(query),{headers:{Accept:'application/json'},signal:mainLocationSearchController.signal})
+    .then(function(r){if(!r.ok)throw new Error('Search unavailable');return r.json();})
+    .then(function(items){mainLocationResults=Array.isArray(items)?items:[];renderLocationResults();})
+    .catch(function(err){if(err.name!=='AbortError')results.innerHTML='<div class="mm-search-status">Could not search right now. You can still tap the map.</div>';})
+    .finally(function(){button.disabled=false;button.textContent='Search';});return false;
+}
+function renderLocationResults(){
+  var results=document.getElementById('loc-search-results');results.innerHTML='';
+  if(!mainLocationResults.length){results.innerHTML='<div class="mm-search-status">No matching location found. Try an area or pincode.</div>';results.classList.add('show');return;}
+  mainLocationResults.forEach(function(item,index){var p=locationAddressParts(item.address,item.display_name),button=document.createElement('button');button.type='button';button.className='mm-result';button.setAttribute('role','option');var title=p.city||item.name||'Location',detail=item.display_name||p.address;button.innerHTML='<span class="mm-result-pin">●</span><span class="mm-result-copy"><strong>'+eh(title)+'</strong><small>'+eh(detail)+'</small></span>';button.addEventListener('click',function(){chooseLocationResult(index);});results.appendChild(button);});results.classList.add('show');
+}
+function chooseLocationResult(index){var item=mainLocationResults[index];if(!item)return;var lat=Number(item.lat),lng=Number(item.lon),p=locationAddressParts(item.address,item.display_name);previewMainLocation(lat,lng,p.address||item.display_name,p.city,p.pin);mainMap.flyTo([lat,lng],16,{animate:true,duration:.8});document.getElementById('loc-search-input').value=item.display_name||p.address;hideLocationResults();}
+function hideLocationResults(){var results=document.getElementById('loc-search-results');if(results)results.classList.remove('show');}
+function commitMainLocation(){
+  if(!mainPendingLocation){toast('Search for a place or tap the map first','err');return;}
+  var loc=mainPendingLocation;_userLat=loc.lat;_userLng=loc.lng;sv('ls_lat',''+loc.lat);sv('ls_lng',''+loc.lng);sv('ls_det_lat',''+loc.lat);sv('ls_det_lng',''+loc.lng);sv('ls_det_city',loc.city);sv('ls_det_pin',loc.pin);sv('ls_detected_full',loc.address);
+  document.getElementById('loc-btn-txt').textContent=loc.city||t('location_set');document.getElementById('lp-addr').textContent=loc.address;document.getElementById('lp-coords').textContent='Lat '+loc.lat.toFixed(5)+' · Lng '+loc.lng.toFixed(5);document.getElementById('loc-pill').classList.add('show');document.getElementById('search-inp').placeholder=t('search_placeholder');
+  renderShops();if(_shopView==='map')renderShopsMap();closeMapModal();toast('Delivery location set');
+}
+function detectMainLoc(silent){
+  if(!navigator.geolocation){if(!silent)toast('Geolocation not supported','err');return;}
+  var btn=document.getElementById('loc-detect-btn');btn.disabled=true;btn.textContent='Detecting...';
+  navigator.geolocation.getCurrentPosition(function(pos){var lat=pos.coords.latitude,lng=pos.coords.longitude;mainMap.flyTo([lat,lng],15,{animate:true,duration:1});previewMainLocation(lat,lng,'Current GPS location');reverseMainLocation(lat,lng);btn.disabled=false;btn.textContent='Use GPS';},function(err){btn.disabled=false;btn.textContent='Use GPS';if(!silent)toast(['','Permission denied','Location unavailable','Location request timed out'][err.code]||'Location error','err');},{enableHighAccuracy:true,timeout:10000});
 }
 function dismissLoc(){document.getElementById('loc-pill').classList.remove('show');document.getElementById('loc-btn-txt').textContent=t('location_add');document.getElementById('search-inp').placeholder=t('search_placeholder');}
 
