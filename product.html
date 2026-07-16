@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/jpeg" href="/favicon.jpeg">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Cpath d='M14 48V16h9l18 20V16h9v32h-9L23 28v20z' fill='%23E53935'/%3E%3C/svg%3E">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Product - Nexcart</title>
@@ -899,7 +899,7 @@ body{background:radial-gradient(circle at 8% 10%,rgba(237,18,36,.08),transparent
         </div>
         <div class="pay-cod-note show" id="pay-cod-note"> Keep exact change ready. Our delivery partner will collect at your door.</div>
       </div>
-      <button class="btn-confirm" onclick="confirmOrder()"> Confirm & Place Order</button>
+      <button class="btn-confirm" id="btn-confirm-order" onclick="confirmOrder()">Confirm &amp; Place Order</button>
     </div>
   </div>
 </div>
@@ -925,7 +925,7 @@ var auth = firebase.auth();
 function sv(k,v){try{localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){}}
 function ld(k,def){try{var v=localStorage.getItem(k);return v!==null?v:(def||'');}catch(e){return def||'';}}
 function ldJ(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):(def||[]);}catch(e){return def||[];}}
-function eh(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function eh(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function distanceKm(la1,ln1,la2,ln2){var R=6371,dLat=(la2-la1)*Math.PI/180,dLng=(ln2-ln1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 function getDeviceId(){var id=localStorage.getItem('ls_device_id');if(!id){id='dev_'+Math.random().toString(36).slice(2)+Date.now();localStorage.setItem('ls_device_id',id);}return id;}
 var DEVICE_ID=getDeviceId();
@@ -1170,10 +1170,10 @@ function renderRelated(){
     var oldPrice=parseFloat(p.oldPrice||p.mrp||p.originalPrice)||0;
     var rating=(p.rating||(_shop&&_shop.rating)||4.7);
     var eta=(p.deliveryTime||'28 - 32 min');
-    return'<div class="rp-card" onclick="window.location.href=\'product.html?id='+p.id+'\'">'
+    return'<a class="rp-card" href="product.html?id='+encodeURIComponent(p.id)+'" style="text-decoration:none;color:inherit">'
       +'<div class="rp-img-wrap"><span class="rp-wish"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.7-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>'+(hasImg?'<img class="rp-img" src="'+eh(p.image)+'" alt="'+eh(p.name)+'">':'<div class="rp-ph">'+prodIco(p.category)+'</div>')+'</div>'
       +'<div class="rp-body"><div class="rp-shop">'+eh(_shop?_shop.name:'Nexcart')+'</div><div class="rp-name">'+eh(p.name)+'</div><div class="rp-price-row"><span class="rp-price">&#8377;'+price.toLocaleString('en-IN')+'</span>'+(oldPrice&&oldPrice>price?'<span class="rp-old-price">&#8377;'+oldPrice.toLocaleString('en-IN')+'</span>':'')+'</div><div class="rp-meta">&#9734; '+eh(rating)+' - '+eh(eta)+'</div><div class="rp-add">Add</div></div>'
-      +'</div>';
+      +'</a>';
   }).join('');
 }
 
@@ -1252,6 +1252,7 @@ function doBuyNow(){
     +'<div class="os-row"><div class="os-lbl">Quantity</div><div class="os-val">'+_qty+'</div></div>'
     +'<div class="os-row"><div class="os-lbl">Total</div><div class="os-total">'+total+'</div></div>';
   document.getElementById('pay-cod').checked=true;onPayMethodChange();
+  prefillDeliveryForm();
   document.getElementById('delivery-modal').classList.add('open');document.body.style.overflow='hidden';
 }
 function scrollToBuy(){document.getElementById('action-bar').scrollIntoView({behavior:'smooth',block:'center'});}
@@ -1267,11 +1268,13 @@ function prefillDeliveryForm(){
   var cu=ldJ('ls_user_data',null);
   document.getElementById('del-phone').value=ld('ls_del_phone')||(cu?cu.phone||'':'');
 }
-function confirmOrder(){
-  if(!isLoggedIn())return requireLogin('Please sign in to place your order.');
+async function confirmOrder(){
+  if(!auth.currentUser)return requireLogin('Please sign in again to place your order.');
   if(!_pendingOrder)return;
   var addr1=document.getElementById('del-addr1').value.trim(),city=document.getElementById('del-city').value.trim(),pin=document.getElementById('del-pin').value.trim(),phone=document.getElementById('del-phone').value.trim();
   if(!addr1||!city||!pin||!phone){toast('Please fill all required fields','err');return;}
+  if(!/^\d{6}$/.test(pin)){toast('Enter a valid 6-digit PIN code','err');return;}
+  if(!/^[6-9]\d{9}$/.test(phone.replace(/\D/g,''))){toast('Enter a valid 10-digit mobile number','err');return;}
   var landmark=document.getElementById('del-landmark').value.trim();
   var fullAddr=addr1+(landmark?', Near '+landmark:'')+', '+city+' - '+pin;
   var payMethod='cod';
@@ -1279,11 +1282,14 @@ function confirmOrder(){
   var p=_pendingOrder.product,s=_pendingOrder.shop,qty=_pendingOrder.qty;
   var userLat=parseFloat(ld('ls_lat')),userLng=parseFloat(ld('ls_lng')),shopLat=parseFloat(s.lat),shopLng=parseFloat(s.lng);
   if(!isFinite(userLat)||!isFinite(userLng)){toast('Please set your delivery location on the Home page before ordering.','err');return;}
-  if(isFinite(shopLat)&&isFinite(shopLng)&&distanceKm(userLat,userLng,shopLat,shopLng)>7){toast('This shop is outside the 7 km delivery area.','err');return;}
-  var order={deviceId:DEVICE_ID,customerUid:auth.currentUser?auth.currentUser.uid:'',vendorUid:s.ownerUid||s.vendorUid||s.id,type:'single',productId:p.id,shopId:p.shopId,productName:p.name,category:p.category,image:p.image||'',price:p.price,qty:qty,total:p.price*qty,shopName:s.name,shopAddress:s.address||'',shopLat:s.lat||null,shopLng:s.lng||null,deliveryAddress:fullAddr,deliveryLat:parseFloat(ld('ls_lat'))||null,deliveryLng:parseFloat(ld('ls_lng'))||null,phone:phone,paymentMethod:payMethod,paymentLabel:'Cash on Delivery',status:'Confirmed',customerConfirmed:null,orderedAt:new Date().toISOString()};
-  db.collection('orders').add(order).then(function(){
-    closeDeliveryModal();toast(payMethod==='cod'?' Order placed! Pay '+order.total+' cash on delivery':' Order placed! Payment link sent via SMS');_pendingOrder=null;
-  }).catch(function(e){toast('Order failed: '+e.message,'err');});
+  if(!isFinite(shopLat)||!isFinite(shopLng)){toast('This shop has not set a valid delivery location yet.','err');return;}
+  if(distanceKm(userLat,userLng,shopLat,shopLng)>7){toast('This shop is outside the 7 km delivery area.','err');return;}
+  var now=new Date().toISOString();
+  var order={deviceId:DEVICE_ID,customerUid:auth.currentUser.uid,vendorUid:s.ownerUid||s.vendorUid||s.id,type:'single',productId:p.id,shopId:p.shopId,productName:p.name,category:p.category,image:p.image||'',price:p.price,qty:qty,total:p.price*qty,shopName:s.name,shopAddress:s.address||'',shopPhone:s.phone||'',shopLat:s.lat||null,shopLng:s.lng||null,deliveryAddress:fullAddr,deliveryLat:parseFloat(ld('ls_lat'))||null,deliveryLng:parseFloat(ld('ls_lng'))||null,phone:phone.replace(/\D/g,''),paymentMethod:payMethod,paymentLabel:'Cash on Delivery',paymentStatus:'Pending',status:'Confirmed',customerConfirmed:null,orderedAt:now,createdAt:now,updatedAt:now};
+  var submit=document.getElementById('btn-confirm-order');submit.disabled=true;submit.textContent='Placing Order...';
+  try{await auth.currentUser.getIdToken(true);await db.collection('orders').add(order);closeDeliveryModal();toast('Order placed successfully. Pay Rs. '+order.total+' on delivery');_pendingOrder=null;}
+  catch(e){toast(e&&e.code==='permission-denied'?'Permission denied. Please sign out, sign in again, and retry.':'Order failed: '+e.message,'err');}
+  finally{submit.disabled=false;submit.textContent='Confirm & Place Order';}
 }
 
 // 
@@ -1364,6 +1370,7 @@ function renderReviews(){
 }
 
 function markHelpful(reviewId,btn){
+  if(!auth.currentUser)return requireLogin('Please sign in to mark a review as helpful.');
   var helpful=ldJ('ls_helpful',{});if(helpful[reviewId])return;
   helpful[reviewId]=true;sv('ls_helpful',JSON.stringify(helpful));
   btn.classList.add('voted');btn.textContent=' Helpful';
@@ -1429,7 +1436,7 @@ function rebuildReviewPreviews(){
 function uploadReviewImages(){
   if(!_reviewImgFiles.length)return Promise.resolve([]);
   var uploads=_reviewImgFiles.map(function(file,idx){
-    var path='reviews/'+(_product?_product.id:'prod')+'/'+(Date.now())+'_'+idx+'_'+file.name;
+    var path='reviews/'+auth.currentUser.uid+'/'+encodeURIComponent(_product?_product.id:'prod')+'/'+(Date.now())+'_'+idx+'_'+file.name.replace(/[^A-Za-z0-9._-]/g,'_');
     var ref=storage.ref(path);
     var item=document.getElementById('rv-preview-'+idx);
     if(item){var badge=document.createElement('div');badge.className='img-uploading-badge';badge.textContent='Uploading';item.appendChild(badge);}
@@ -1443,7 +1450,7 @@ function uploadReviewImages(){
 
 //  Submit Review 
 function submitReview(){
-  if(!isLoggedIn())return requireLogin('Please sign in to submit a review.');
+  if(!auth.currentUser)return requireLogin('Please sign in to submit a review.');
   if(!_product)return;
   var name=document.getElementById('rv-name').value.trim();
   var title=document.getElementById('rv-title').value.trim();
@@ -1455,11 +1462,11 @@ function submitReview(){
 
   uploadReviewImages().then(function(imageUrls){
     var review={
-      productId:_product.id,shopId:_product.shopId,
+      userUid:auth.currentUser.uid,productId:_product.id,shopId:_product.shopId,
       author:name,title:title,body:body,
       rating:_selectedStar,images:imageUrls,
-      verified:!!_verifiedOrderId,
-      orderId:_verifiedOrderId||null,
+      verified:false,
+      orderId:null,
       helpfulCount:0,deviceId:DEVICE_ID,
       createdAt:new Date().toISOString()
     };
@@ -1483,9 +1490,11 @@ function submitReview(){
 
 //  Check verified purchase for write-review eligibility 
 function checkVerifiedPurchase(productId){
-  db.collection('orders').where('deviceId','==',DEVICE_ID).where('status','==','Delivered').get().then(function(snap){
+  if(!auth.currentUser){_verifiedOrderId=null;return;}
+  db.collection('orders').where('customerUid','==',auth.currentUser.uid).get().then(function(snap){
     var eligible=snap.docs.find(function(d){
       var o=d.data();
+      if(o.status!=='Delivered')return false;
       if(o.productId===productId)return true;
       if(o.items&&o.items.some(function(i){return i.productId===productId;}))return true;
       return false;
@@ -1593,7 +1602,8 @@ function getOrderStatusText(status){
 }
 
 function loadEligibleOrders(productId){
-  db.collection('orders').where('deviceId','==',DEVICE_ID).get().then(function(snap){
+  if(!auth.currentUser){_eligibleOrders=[];renderEligibleOrders();return;}
+  db.collection('orders').where('customerUid','==',auth.currentUser.uid).get().then(function(snap){
     _eligibleOrders=[];
     snap.docs.forEach(function(d){
       var o=Object.assign({id:d.id},d.data());
@@ -1677,7 +1687,7 @@ function rebuildEvPreviews(){
 function uploadEvidenceImages(){
   if(!_evImgFiles.length)return Promise.resolve([]);
   var uploads=_evImgFiles.map(function(file,idx){
-    var path='returns/'+(_product?_product.id:'prod')+'/'+(Date.now())+'_'+idx+'_'+file.name;
+    var path='returns/'+auth.currentUser.uid+'/'+encodeURIComponent(_product?_product.id:'prod')+'/'+(Date.now())+'_'+idx+'_'+file.name.replace(/[^A-Za-z0-9._-]/g,'_');
     return storage.ref(path).put(file).then(function(snap){return snap.ref.getDownloadURL();});
   });
   return Promise.all(uploads);
@@ -1685,6 +1695,7 @@ function uploadEvidenceImages(){
 
 //  Submit Return Request 
 function submitReturnRequest(){
+  if(!auth.currentUser)return requireLogin('Please sign in to submit a return or refund request.');
   if(!_rrSelectedOrderId){toast('Please select an order','err');return;}
   var reason=document.getElementById('rr-reason').value;
   var desc=document.getElementById('rr-description').value.trim();
@@ -1699,7 +1710,7 @@ function submitReturnRequest(){
     var order=_eligibleOrders.find(function(o){return o.id===_rrSelectedOrderId;});
     var snapshot=getRRProductSnapshot(order);
     var request={
-      deviceId:DEVICE_ID,productId:_product?_product.id:'',
+      deviceId:DEVICE_ID,customerUid:auth.currentUser.uid,productId:_product?_product.id:'',
       productName:snapshot.name||(_product?_product.name:'Product'),
       orderId:_rrSelectedOrderId,shopId:_product?_product.shopId:'',
       shopName:_shop?_shop.name:'',
@@ -1725,9 +1736,10 @@ function submitReturnRequest(){
 
 //  Load Existing Return Requests 
 function loadReturnRequests(productId){
-  db.collection('return_requests').where('deviceId','==',DEVICE_ID).where('productId','==',productId).orderBy('createdAt','desc').get().then(function(snap){
+  if(!auth.currentUser)return;
+  db.collection('return_requests').where('customerUid','==',auth.currentUser.uid).get().then(function(snap){
     if(snap.empty)return;
-    var requests=[];snap.forEach(function(d){requests.push(Object.assign({id:d.id},d.data()));});
+    var requests=[];snap.forEach(function(d){var item=Object.assign({id:d.id},d.data());if(item.productId===productId)requests.push(item);});requests.sort(function(a,b){return new Date(b.createdAt||0)-new Date(a.createdAt||0);});
     renderReturnRequests(requests);
   }).catch(function(){});
 }
