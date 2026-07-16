@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/jpeg" href="/favicon.jpeg">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Cpath d='M14 48V16h9l18 20V16h9v32h-9L23 28v20z' fill='%23E53935'/%3E%3C/svg%3E">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Shop - Nexcart</title>
@@ -197,7 +197,7 @@ function renderShop(){
   document.getElementById('shop-offer').textContent=_shop.offer||_shop.tagline||('Browse '+(_shop.category||'local')+' products from this shop.');
   document.getElementById('shop-fallback').textContent=(_shop.name||'Shop').slice(0,2).toUpperCase();
   var img=(_shop.image||_shop.photo||_shop.logo||_shop.cover||'').trim?String(_shop.image||_shop.photo||_shop.logo||_shop.cover||'').trim():'';
-  if(img){var el=document.getElementById('shop-img');el.src=img;el.alt=_shop.name||'Shop';el.style.display='block';document.getElementById('shop-fallback').style.display='none';}
+  if(img){var el=document.getElementById('shop-img'),fallback=document.getElementById('shop-fallback');el.alt=_shop.name||'Shop';el.onload=function(){el.style.display='block';fallback.style.display='none';};el.onerror=function(){el.style.display='none';fallback.style.display='flex';};el.src=img;}
   if(_shop.phone){var call=document.getElementById('call-btn');call.href='tel:'+_shop.phone;call.style.display='inline-flex';}
 }
 function renderProducts(){
@@ -212,7 +212,7 @@ function renderProducts(){
     var eta=(p.deliveryTime||'28 - 32 min');
     return '<a class="card" href="'+productUrl(p)+'">'+
       '<div class="pic"><span class="wish"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.7-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>'+(img?'<img src="'+eh(img)+'" alt="'+eh(p.name||'Product')+'" loading="lazy">':eh(prodIcon(p.category)))+'</div>'+
-      '<div class="body"><div class="shopline">'+eh(_shop.name||'Nexcart')+'</div><div class="name">'+eh(p.name||'Product')+'</div><div class="price-row"><span class="price">&#8377;'+price.toLocaleString('en-IN')+'</span>'+(oldPrice&&oldPrice>price?'<span class="old-price">&#8377;'+oldPrice.toLocaleString('en-IN')+'</span>':'')+'</div><div class="cat">&#9734; '+eh(rating)+' - '+eh(eta)+'</div><div class="foot"><span class="view">Add</span></div></div>'+
+      '<div class="body"><div class="shopline">'+eh(_shop.name||'Nexcart')+'</div><div class="name">'+eh(p.name||'Product')+'</div><div class="price-row"><span class="price">&#8377;'+price.toLocaleString('en-IN')+'</span>'+(oldPrice&&oldPrice>price?'<span class="old-price">&#8377;'+oldPrice.toLocaleString('en-IN')+'</span>':'')+'</div><div class="cat">&#9734; '+eh(rating)+' - '+eh(eta)+'</div><div class="foot"><span class="view">View Product</span></div></div>'+
     '</a>';
   }).join('');
 }
