@@ -129,7 +129,12 @@ body.guest-mode .guest-auth-actions{display:flex}
 .settings-logout-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 14px;border:none;border-radius:18px;background:linear-gradient(135deg,#FFF1EA,#FFE1D2);color:var(--error);font-family:var(--fb);font-size:.84rem;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(229,62,62,.10);transition:all .18s}
 .settings-logout-btn:hover{background:linear-gradient(135deg,var(--error),#C53030);color:#fff;transform:translateY(-1px)}
 .settings-logout-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.settings-sound-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid rgba(11,45,107,.12);border-radius:18px;background:linear-gradient(135deg,#EEF4FF,#F7FAFF);color:var(--navy);font-family:var(--fb);font-size:.84rem;font-weight:800;cursor:pointer;transition:all .18s}.settings-sound-btn:hover{border-color:var(--orange);color:var(--orange-dark);transform:translateY(-1px)}.settings-sound-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px}.settings-sound-copy small{font-size:.66rem;font-weight:600;color:var(--mid)}.settings-sound-arrow{font-size:1rem}
+.settings-sound-card{padding:14px;border:1px solid rgba(11,45,107,.11);border-radius:20px;background:linear-gradient(145deg,#F8FAFF,#EEF4FF);box-shadow:0 10px 26px rgba(11,45,107,.06)}
+.settings-sound-title{font-size:.84rem;font-weight:800;color:var(--navy);margin-bottom:3px}.settings-sound-note{font-size:.67rem;line-height:1.45;color:var(--mid);margin-bottom:12px}
+.settings-sound-field{display:block;margin-bottom:12px}.settings-sound-field>span,.settings-volume-head{display:flex;align-items:center;justify-content:space-between;font-size:.66rem;font-weight:800;color:#536078;margin-bottom:6px}
+.settings-sound-select{width:100%;padding:10px 34px 10px 11px;border:1px solid rgba(11,45,107,.14);border-radius:12px;background:#fff;color:#172033;font-family:var(--fb);font-size:.76rem;font-weight:700;outline:none}.settings-sound-select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,107,26,.12)}
+.settings-volume-range{width:100%;accent-color:var(--orange);cursor:pointer}.settings-file-label{display:flex;align-items:center;justify-content:center;width:100%;padding:9px 10px;border:1px dashed rgba(11,45,107,.25);border-radius:12px;background:rgba(255,255,255,.72);color:var(--navy);font-size:.7rem;font-weight:800;cursor:pointer}.settings-file-label:hover{border-color:var(--orange);color:var(--orange-dark)}.settings-file-label input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.settings-sound-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:11px}.settings-sound-action{min-height:38px;padding:8px;border:0;border-radius:12px;background:#fff;color:var(--navy);font-family:var(--fb);font-size:.69rem;font-weight:800;cursor:pointer;box-shadow:0 5px 14px rgba(11,45,107,.08)}.settings-sound-action.primary{background:linear-gradient(135deg,var(--orange),#FF853D);color:#fff}.settings-sound-action:hover{transform:translateY(-1px)}.settings-sound-status{display:block;margin-top:9px;font-size:.61rem;line-height:1.45;color:#7A869A}
 
 /* Nav notif dropdown */
 .notif-dropdown{position:absolute;top:calc(100% + 14px);right:0;width:360px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-xl);z-index:500;overflow:hidden;display:none;animation:notifDropIn .22s cubic-bezier(.34,1.2,.64,1)}
@@ -1561,6 +1566,7 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
   .settings-btn{display:none!important}
   .settings-wrap .settings-panel{position:fixed!important;left:10px!important;right:10px!important;top:auto!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;max-height:calc(100dvh - 110px)!important;overflow-y:auto!important;transform:translateY(18px)!important;border-radius:22px!important;z-index:1500!important}
   .settings-wrap.open .settings-panel{transform:translateY(0)!important}
+  body>.settings-panel.mobile-settings-panel{display:block!important;position:fixed!important;left:10px!important;right:10px!important;top:auto!important;bottom:calc(86px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;max-height:calc(100dvh - 110px)!important;overflow-y:auto!important;opacity:1!important;pointer-events:auto!important;transform:translateY(0)!important;border-radius:22px!important;z-index:1600!important}
 
   .mobile-nav-shortcuts{display:grid!important;position:fixed!important;left:8px!important;right:8px!important;bottom:calc(7px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:520px!important;margin:0 auto!important;transform:none!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;grid-template-rows:1fr!important;gap:2px!important;padding:6px!important;border-radius:22px!important;background:rgba(10,10,11,.97)!important;border:1px solid rgba(255,204,32,.55)!important;box-shadow:0 14px 38px rgba(0,0,0,.3)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;z-index:1400!important}
   .mobile-nav-row{display:contents!important}
@@ -1579,9 +1585,10 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
   .mobile-nav-shortcut svg{width:19px!important;height:19px!important}
 }
 @media(max-width:600px){
-  .customer-home .nx-notify-bell{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+  .customer-home .nx-notify-bell{display:none!important}
   .customer-home .nx-notify-panel{right:10px!important;bottom:calc(148px + env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 180px)!important}
 }
+.customer-home .nx-notify-bell{display:none!important}
 </style>
 </head>
 <body class="customer-home">
@@ -1655,7 +1662,15 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
           </div>
           <div class="settings-section">
             <div class="settings-label">Notifications</div>
-            <button class="settings-sound-btn" type="button" onclick="openNotificationSoundSettings()"><span class="settings-sound-copy"><span>Notification sound</span><small>Choose, upload, adjust volume and test</small></span><span class="settings-sound-arrow" aria-hidden="true">&rsaquo;</span></button>
+            <div class="settings-sound-card">
+              <div class="settings-sound-title">Notification sound</div>
+              <div class="settings-sound-note">Choose how order and account alerts sound on this device.</div>
+              <label class="settings-sound-field"><span>Sound style</span><select class="settings-sound-select" id="home-sound-choice" onchange="setHomeNotificationSound(this.value)"><option value="classic">Classic chime</option><option value="bright">Bright bell</option><option value="soft">Soft tone</option><option value="urgent">Urgent alert</option><option value="custom">My custom sound</option><option value="silent">Silent</option></select></label>
+              <label class="settings-sound-field"><span class="settings-volume-head"><span>Volume</span><b id="home-sound-volume-value">80%</b></span><input class="settings-volume-range" id="home-sound-volume" type="range" min="0" max="100" step="5" value="80" oninput="previewHomeNotificationVolume(this.value)" onchange="setHomeNotificationVolume(this.value)"></label>
+              <label class="settings-file-label">Upload my own sound<input id="home-custom-sound" type="file" accept="audio/*" onchange="uploadHomeNotificationSound(this)"></label>
+              <div class="settings-sound-actions"><button class="settings-sound-action" type="button" onclick="testHomeNotificationSound()">Test sound</button><button class="settings-sound-action primary" type="button" onclick="enableHomeBrowserNotifications()">Enable alerts</button></div>
+              <small class="settings-sound-status" id="home-sound-status">Sound settings are saved on this device.</small>
+            </div>
           </div>
           <div class="settings-section">
             <button class="settings-logout-btn" id="settings-logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span id="settings-logout-txt">Logout</span></button>
@@ -2430,9 +2445,15 @@ function applyLanguage(){
 function updateSettingsButtons(){['en','hi','ta'].forEach(function(code){var btn=document.getElementById('lang-'+code+'-btn');if(btn)btn.classList.toggle('active',_lang===code);});var wrap=document.getElementById('settings-wrap');var btn=document.getElementById('settings-btn');if(wrap&&btn)btn.setAttribute('aria-expanded',wrap.classList.contains('open')?'true':'false');}
 function setTheme(theme){_theme=theme==='dark'?'dark':'light';sv('ls_theme',_theme);applyTheme();updateSettingsButtons();toast(t(_theme==='dark'?'toast_theme_dark':'toast_theme_light'),'info');}
 function setLanguage(lang){if(!I18N[lang])lang='en';_lang=lang;sv('ls_lang',_lang);applyLanguage();toast(t('toast_language'),'info');}
-function toggleSettingsPanel(){var wrap=document.getElementById('settings-wrap');if(!wrap)return;wrap.classList.toggle('open');document.body.classList.toggle('settings-open',wrap.classList.contains('open'));if(wrap.classList.contains('open'))closeCategoryMenu();updateSettingsButtons();}
-function closeSettingsPanel(){var wrap=document.getElementById('settings-wrap');if(wrap)wrap.classList.remove('open');document.body.classList.remove('settings-open');updateSettingsButtons();}
-function openNotificationSoundSettings(){closeSettingsPanel();if(window.NexCartNotifications&&NexCartNotifications.openSettings){NexCartNotifications.openSettings();return;}var bell=document.getElementById('nx-notify-bell');if(bell)bell.click();else toast('Notification settings are still loading','info');}
+function toggleSettingsPanel(){var wrap=document.getElementById('settings-wrap'),panel=document.getElementById('settings-panel');if(!wrap||!panel)return;var opening=!document.body.classList.contains('settings-open');if(opening){wrap.classList.add('open');document.body.classList.add('settings-open');if(window.matchMedia('(max-width:760px)').matches){document.body.appendChild(panel);panel.classList.add('mobile-settings-panel');}closeCategoryMenu();syncHomeNotificationSettings();}else closeSettingsPanel();updateSettingsButtons();}
+function closeSettingsPanel(){var wrap=document.getElementById('settings-wrap'),panel=document.getElementById('settings-panel');if(wrap)wrap.classList.remove('open');document.body.classList.remove('settings-open');if(wrap&&panel&&panel.parentNode!==wrap){panel.classList.remove('mobile-settings-panel');wrap.appendChild(panel);}updateSettingsButtons();}
+function syncHomeNotificationSettings(){var api=window.NexCartNotifications,choice=document.getElementById('home-sound-choice'),volume=document.getElementById('home-sound-volume'),value=document.getElementById('home-sound-volume-value'),status=document.getElementById('home-sound-status');if(!api||!api.getPreferences){if(status)status.textContent='Notification settings are still loading.';return;}var prefs=api.getPreferences();if(choice)choice.value=prefs.sound||'classic';var level=Math.round((Number(prefs.volume)||0)*100);if(volume)volume.value=level;if(value)value.textContent=level+'%';if(status){var text=!('Notification' in window)?'Browser alerts are not supported here.':'Browser alert permission: '+Notification.permission+'.';if(location.protocol==='file:')text+=' Open through HTTPS or localhost to enable browser alerts.';else text+=' Sound settings are saved on this device.';status.textContent=text;}}
+function setHomeNotificationSound(sound){var api=window.NexCartNotifications;if(!api||!api.setPreferences)return;api.setPreferences({sound:sound,enabled:sound!=='silent'});if(sound!=='silent')api.playSound(sound==='urgent'?'urgent':'normal');syncHomeNotificationSettings();}
+function previewHomeNotificationVolume(level){var value=document.getElementById('home-sound-volume-value');if(value)value.textContent=level+'%';}
+function setHomeNotificationVolume(level){var api=window.NexCartNotifications;if(api&&api.setPreferences)api.setPreferences({volume:Number(level)/100});}
+function uploadHomeNotificationSound(input){var file=input.files&&input.files[0],api=window.NexCartNotifications;if(!file||!api||!api.setCustomSound)return;if(file.size>1000000){toast('Choose an audio file smaller than 1 MB.','error');input.value='';return;}var reader=new FileReader();reader.onload=function(){api.setCustomSound(String(reader.result||''));syncHomeNotificationSettings();api.playSound('normal');toast('Your notification sound is ready.','success');};reader.readAsDataURL(file);}
+function testHomeNotificationSound(){var api=window.NexCartNotifications;if(!api){toast('Notification settings are still loading.','info');return;}var prefs=api.getPreferences();if(prefs.sound==='silent'){toast('Choose a sound before testing.','info');return;}api.playSound(prefs.sound==='urgent'?'urgent':'normal');}
+function enableHomeBrowserNotifications(){var api=window.NexCartNotifications;if(!api||!api.requestPermission){toast('Browser alerts are not available.','info');return;}api.requestPermission().then(function(result){syncHomeNotificationSettings();toast(result==='granted'?'Browser notifications enabled.':'Browser notification permission: '+result+'.',result==='granted'?'success':'info');});}
 function updateNavCartBtn(){var btn=document.getElementById('nav-cart-btn'),countEl=document.getElementById('nav-cart-count'),label=document.getElementById('nav-cart-lbl'),mobileCount=document.getElementById('nav-cart-count-mobile');if(!btn||!countEl||!label)return;var count=getCartItemCount();countEl.textContent=count;label.textContent=t('nav_cart');btn.classList.toggle('empty-cart',count<1);if(mobileCount){if(count){mobileCount.textContent=count;mobileCount.classList.add('show');}else mobileCount.classList.remove('show');}}
 function handleNavCartClick(){_cartRequested=true;updateCartUI();openCartModal();}
 
@@ -3283,7 +3304,7 @@ function onSearchFocus(){var v=document.getElementById('search-inp').value.trim(
 function closeDropdown(){var dd=document.getElementById('search-dropdown');if(dd)dd.classList.remove('show');}
 document.addEventListener('click',function(e){if(!e.target.closest('.search-box-wrap'))closeDropdown();});
 document.addEventListener('click',function(e){
-  if(!e.target.closest('.settings-wrap')&&!e.target.closest('.settings-shortcut'))closeSettingsPanel();
+  if(!e.target.closest('.settings-wrap')&&!e.target.closest('.settings-shortcut')&&!e.target.closest('.settings-panel'))closeSettingsPanel();
 });
 document.addEventListener('keydown',function(e){
   if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('np-card')){e.preventDefault();e.target.click();}
