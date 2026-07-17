@@ -2837,6 +2837,7 @@ function startCategoriesListener(){
 }
 function categoryImageFor(name){
   var n=(name||'').toLowerCase();
+  if(n.indexOf('restaurant')>-1||n.indexOf('kitchen')>-1||n.indexOf('hotel')>-1||n.indexOf('biryani')>-1||n.indexOf('meal')>-1)return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=85';
   if(n.indexOf('fruit')>-1||n.indexOf('vegetable')>-1||n.indexOf('fresh')>-1)return 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=360&q=85';
   if(n.indexOf('dairy')>-1||n.indexOf('egg')>-1||n.indexOf('bread')>-1)return 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=360&q=85';
   if(n.indexOf('rice')>-1||n.indexOf('dal')>-1||n.indexOf('atta')>-1)return 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=360&q=85';
@@ -3396,7 +3397,8 @@ function renderShops(){
   grid.innerHTML=list.map(function(s){
     var badge=s.dist!==undefined?distBadge(s.dist):'';var pc=s.productCount||0;
     var sid=safeId(s.id);
-    var img=(s.image||s.photo||s.logo||s.cover||s.banner||'').trim?String(s.image||s.photo||s.logo||s.cover||s.banner||'').trim():'';
+    var uploadedShopImage=s.shopImage||s.shopImageUrl||s.shopPhoto||s.shopPhotoUrl||s.coverImage||s.coverImageUrl||s.logoUrl||s.logoURL||s.imageUrl||s.imageURL||s.image||s.photo||s.logo||s.cover||s.banner||'';
+    var img=String(uploadedShopImage||'').trim();
     var fallbackImg=categoryImageFor(s.category||s.name||'shop');
     var offerLine=s.offer||s.deal||s.discountText||s.tagline||((s.category||t('shop_chip'))+' shop');
     return '<a class="store-card" href="shop.html?id='+sid+'" onclick="goToShopPage(decodeURIComponent(\''+sid+'\'));return false" style="--store-img:url(\''+eh(img||fallbackImg)+'\')">'+
