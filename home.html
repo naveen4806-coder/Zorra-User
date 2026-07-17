@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="nexcat-logo.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Nexcart - Quick Commerce & Fast Delivery</title>
@@ -130,6 +129,7 @@ body.guest-mode .guest-auth-actions{display:flex}
 .settings-logout-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 14px;border:none;border-radius:18px;background:linear-gradient(135deg,#FFF1EA,#FFE1D2);color:var(--error);font-family:var(--fb);font-size:.84rem;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(229,62,62,.10);transition:all .18s}
 .settings-logout-btn:hover{background:linear-gradient(135deg,var(--error),#C53030);color:#fff;transform:translateY(-1px)}
 .settings-logout-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.settings-sound-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid rgba(11,45,107,.12);border-radius:18px;background:linear-gradient(135deg,#EEF4FF,#F7FAFF);color:var(--navy);font-family:var(--fb);font-size:.84rem;font-weight:800;cursor:pointer;transition:all .18s}.settings-sound-btn:hover{border-color:var(--orange);color:var(--orange-dark);transform:translateY(-1px)}.settings-sound-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px}.settings-sound-copy small{font-size:.66rem;font-weight:600;color:var(--mid)}.settings-sound-arrow{font-size:1rem}
 
 /* Nav notif dropdown */
 .notif-dropdown{position:absolute;top:calc(100% + 14px);right:0;width:360px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-xl);z-index:500;overflow:hidden;display:none;animation:notifDropIn .22s cubic-bezier(.34,1.2,.64,1)}
@@ -1531,7 +1531,6 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
 .quick-category-card.qc-image-failed::before{content:attr(data-fallback);position:absolute;z-index:0;right:30px;top:50%;transform:translateY(-50%);font-size:5rem;line-height:1;filter:drop-shadow(0 10px 12px rgba(0,0,0,.14))}
 .quick-category-card .qc-category-art{position:absolute;z-index:0;right:8px;bottom:0;width:58%;height:96%;filter:drop-shadow(0 12px 14px rgba(95,48,0,.18));pointer-events:none}
 </style>
-<link rel="stylesheet" href="nexcart-notifications.css">
 <style>
 /* Final card containment: keep shop image, title and price in separate rows. */
 .stores-grid .store-card,.stores-grid.single-store .store-card{display:flex!important;flex-direction:column!important;position:relative!important;overflow:hidden!important;min-width:0!important}
@@ -1653,6 +1652,10 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
               <button class="settings-choice" id="lang-hi-btn" onclick="setLanguage('hi')"><span id="lang-hi-txt">Hindi</span></button>
               <button class="settings-choice" id="lang-ta-btn" onclick="setLanguage('ta')"><span id="lang-ta-txt">Tamil</span></button>
             </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-label">Notifications</div>
+            <button class="settings-sound-btn" type="button" onclick="openNotificationSoundSettings()"><span class="settings-sound-copy"><span>Notification sound</span><small>Choose, upload, adjust volume and test</small></span><span class="settings-sound-arrow" aria-hidden="true">&rsaquo;</span></button>
           </div>
           <div class="settings-section">
             <button class="settings-logout-btn" id="settings-logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span id="settings-logout-txt">Logout</span></button>
@@ -2429,6 +2432,7 @@ function setTheme(theme){_theme=theme==='dark'?'dark':'light';sv('ls_theme',_the
 function setLanguage(lang){if(!I18N[lang])lang='en';_lang=lang;sv('ls_lang',_lang);applyLanguage();toast(t('toast_language'),'info');}
 function toggleSettingsPanel(){var wrap=document.getElementById('settings-wrap');if(!wrap)return;wrap.classList.toggle('open');document.body.classList.toggle('settings-open',wrap.classList.contains('open'));if(wrap.classList.contains('open'))closeCategoryMenu();updateSettingsButtons();}
 function closeSettingsPanel(){var wrap=document.getElementById('settings-wrap');if(wrap)wrap.classList.remove('open');document.body.classList.remove('settings-open');updateSettingsButtons();}
+function openNotificationSoundSettings(){closeSettingsPanel();if(window.NexCartNotifications&&NexCartNotifications.openSettings){NexCartNotifications.openSettings();return;}var bell=document.getElementById('nx-notify-bell');if(bell)bell.click();else toast('Notification settings are still loading','info');}
 function updateNavCartBtn(){var btn=document.getElementById('nav-cart-btn'),countEl=document.getElementById('nav-cart-count'),label=document.getElementById('nav-cart-lbl'),mobileCount=document.getElementById('nav-cart-count-mobile');if(!btn||!countEl||!label)return;var count=getCartItemCount();countEl.textContent=count;label.textContent=t('nav_cart');btn.classList.toggle('empty-cart',count<1);if(mobileCount){if(count){mobileCount.textContent=count;mobileCount.classList.add('show');}else mobileCount.classList.remove('show');}}
 function handleNavCartClick(){_cartRequested=true;updateCartUI();openCartModal();}
 
