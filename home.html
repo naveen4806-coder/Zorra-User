@@ -1745,22 +1745,24 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
       </div>
       <div class="cats-tip" id="cats-tip">Tap a card to filter shops</div>
       <div class="cats-list-control">
-        <button class="cats-tab cats-list-btn" id="cats-list-btn" type="button" onclick="toggleAllCategoryList(event)" aria-expanded="false" aria-controls="category-subfilters"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg><span>Browse Full List</span></button>
+        <button class="cats-tab cats-list-btn" id="cats-list-btn" type="button" onclick="toggleAllCategoryList(event)" aria-expanded="false" aria-controls="category-subfilters"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg><span>Category Menu</span></button>
       </div>
       <div class="cats-tabs" aria-label="Shop departments">
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Grocery',this)">🛒 Grocery</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Fruits & Vegetables',this)">🥬 Fruits & Vegetables</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Dairy & Eggs',this)">🥛 Dairy & Eggs</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Bakery',this)">🍞 Bakery</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Restaurants',this)">🍽️ Restaurants</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Meat & Seafood',this)">🍗 Meat & Seafood</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Snacks & Beverages',this)">🥤 Snacks & Beverages</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Home Essentials',this)">🧹 Home Essentials</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Personal Care',this)">🧴 Personal Care</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Baby Care',this)">👶 Baby Care</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Stationery',this)">📚 Stationery</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Flowers & Gifts',this)">🌸 Flowers & Gifts</button>
-        <button class="cats-tab" type="button" onclick="filterCategoryTab('Electronics Accessories',this)">🔌 Electronics Accessories</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Grocery',this)">Grocery</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Fruits & Vegetables',this)">Fruits &amp; Vegetables</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Dairy & Eggs',this)">Dairy &amp; Eggs</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Bakery',this)">Bakery</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Restaurants',this)">Restaurants</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Meat & Seafood',this)">Meat &amp; Seafood</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Snacks & Beverages',this)">Snacks &amp; Beverages</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Home Essentials',this)">Home Essentials</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Personal Care',this)">Personal Care</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab(&quot;Women's Care&quot;,this)">Women's Care</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Health',this)">Health</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Baby Care',this)">Baby Care</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Stationery',this)">Stationery</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Flowers & Gifts',this)">Flowers &amp; Gifts</button>
+        <button class="cats-tab" type="button" onclick="filterCategoryTab('Electronics Accessories',this)">Electronics Accessories</button>
       </div>
     </div>
     <div class="cats-scroller" id="cats-row">
@@ -2839,6 +2841,8 @@ function startCategoriesListener(){
 }
 function categoryImageFor(name){
   var n=(name||'').toLowerCase();
+  if(n.indexOf("women's care")>-1||n.indexOf('womens care')>-1||n.indexOf('sanitary')>-1)return 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85';
+  if(n.indexOf('health')>-1||n.indexOf('medicine')>-1||n.indexOf('pharmacy')>-1)return 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=700&q=85';
   if(n.indexOf('restaurant')>-1||n.indexOf('kitchen')>-1||n.indexOf('hotel')>-1||n.indexOf('biryani')>-1||n.indexOf('meal')>-1)return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=85';
   if(n.indexOf('fruit')>-1||n.indexOf('vegetable')>-1||n.indexOf('fresh')>-1)return 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=360&q=85';
   if(n.indexOf('dairy')>-1||n.indexOf('egg')>-1||n.indexOf('bread')>-1)return 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=360&q=85';
@@ -2863,15 +2867,25 @@ function categoryImageFor(name){
 }
 function renderCategories(cats){
   var row=document.getElementById('cats-row');if(!row)return;
-  row.innerHTML=cats.map(function(c){
-    var name=c.name||'Category',shopCat=c.shopCategory||name,accent='var(--orange)',bg='var(--orange-pale)';
+  var palettes=[['#D84315','#FFF0E8'],['#087F5B','#E6FCF5'],['#1D4ED8','#EAF1FF'],['#7C3AED','#F3E8FF'],['#B42318','#FFF0F0'],['#9A6700','#FFF8D6'],['#C026D3','#FCE7F3'],['#0369A1','#E0F2FE'],['#0F766E','#E6FFFB'],['#BE123C','#FFF1F2'],['#4338CA','#EEF2FF'],['#A16207','#FEF9C3'],['#047857','#ECFDF5'],['#6D28D9','#F5F3FF'],['#C2410C','#FFF7ED']];
+  var icons=['🛒','🥬','🥛','🍞','🍽️','🍗','🥤','🧹','🧴','🌸','➕','👶','📚','🎁','🔌'];
+  row.innerHTML=cats.map(function(c,index){
+    var name=c.name||'Category',shopCat=c.shopCategory||name,p=palettes[index%palettes.length],accent=p[0],bg=p[1];
     var imgSrc=(c.image&&c.image.trim())?c.image.trim():categoryImageFor(name);
-    var mediaHtml='<img src="'+eh(imgSrc)+'" alt="'+eh(name)+'" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'cat-image-failed\')">';
-    return '<a class="cat-card" href="#" onclick="filterByShopCategory(\''+eh(shopCat)+'\',true);return false" style="--cat-accent:'+accent+';--cat-bg:'+bg+'" aria-label="Browse '+eh(name)+' shops"><div class="cat-icon-wrap" data-fallback="'+eh(name)+'">'+mediaHtml+'</div><div class="cat-content"><span class="cat-label">'+eh(name)+'</span></div><div class="cat-bar"></div></a>';
+    var mediaHtml='<img src="'+eh(imgSrc)+'" alt="'+eh(name)+'" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'cat-image-failed\')"><span class="category-emoji" aria-hidden="true">'+icons[index%icons.length]+'</span>';
+    return '<a class="cat-card" href="#" onclick="filterByShopCategory(\''+eh(shopCat)+'\',true);return false" style="--cat-accent:'+accent+';--cat-bg:'+bg+'" aria-label="Browse '+eh(name)+' shops"><div class="cat-icon-wrap" data-fallback="'+eh(name)+'">'+mediaHtml+'</div><div class="cat-content"><span class="cat-label">'+eh(name)+'</span><span class="cat-helper">Tap to see products</span></div><div class="cat-bar"></div></a>';
   }).join('');
 }
 
 var CATEGORY_SUBFILTERS={
+  "Women's Care":[
+    {group:'Period Care',items:['Sanitary Pads','Panty Liners','Tampons','Menstrual Cups']},
+    {group:'Comfort & Hygiene',items:['Intimate Hygiene','Period Pain Relief']}
+  ],
+  'Health':[
+    {group:'Common Health Needs',items:['Fever','Cold','Body Pain Relief','Headache']},
+    {group:'Ongoing & Personal Care',items:['Diabetes Care','Condoms']}
+  ],
   'Fashion & Clothing':[
     {group:'Mens Daily Wear',items:['Cotton Shirts','T-Shirts & Polos','Trousers & Jeans','Lungi + Shirt Combos']},
     {group:'Mens Traditional & Festive',items:['Dhoti / Veshti','Kurta + Pyjama','Angavastram','Sherwani / Jodhpuri']},
@@ -4030,7 +4044,33 @@ window.addEventListener('load',function(){
 .address-card.default{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-10)}.address-copy{font-size:.78rem;line-height:1.45;color:var(--dark)}.address-copy strong{display:block;color:var(--black);margin-bottom:2px}.address-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .address-mini-btn{border:1px solid var(--border);background:#fff;color:var(--navy);border-radius:8px;padding:6px 8px;font:700 .67rem var(--fb);cursor:pointer}.address-mini-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}.address-mini-btn.danger{color:var(--error)}
 .health-note{margin-top:8px;padding:9px 11px;border-radius:10px;background:#EFFAF5;color:#087A51;font-size:.72rem;font-weight:700}
-@media(max-width:560px){.address-card{flex-direction:column}.address-actions{justify-content:flex-start}}
+.cats-list-control{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;margin:0 0 14px!important;padding:0 0 14px!important;border-bottom:1px solid #E7E9EE!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+.cats-list-control .browse-all-products-btn,.cats-list-control .cats-list-btn{display:flex!important;width:100%!important;min-width:0!important;height:40px!important;margin:0!important;padding:0 10px!important;align-items:center!important;justify-content:center!important;gap:7px!important;border-radius:10px!important;font-size:.72rem!important;font-weight:850!important;line-height:1!important;box-shadow:none!important;white-space:nowrap!important}
+.cats-list-control .browse-all-products-btn{background:#E3192D!important;color:#FFDC28!important;border:1px solid #E3192D!important}.cats-list-control .browse-all-products-btn:hover{background:#C81022!important;color:#FFE45C!important;transform:translateY(-1px);box-shadow:0 8px 18px rgba(227,25,45,.22)!important}
+.cats-list-control .cats-list-btn{background:#E3192D!important;color:#fff!important;border:1.5px solid #E3192D!important;box-shadow:0 7px 16px rgba(227,25,45,.2)!important}.cats-list-control .cats-list-btn:hover,.cats-list-control .cats-list-btn.active{background:#C81022!important;color:#fff!important;border-color:#C81022!important;transform:translateY(-1px)!important}.cats-list-control .cats-list-btn svg{width:15px!important;height:15px!important;stroke:currentColor!important}
+.cats-tabs .cats-tab{border:1px solid transparent!important;box-shadow:0 4px 10px rgba(16,24,40,.05)!important}
+.cats-tabs .cats-tab:nth-child(1){background:#FFF1E8!important;border-color:#FFD2B8!important;color:#A63D00!important}.cats-tabs .cats-tab:nth-child(2){background:#E9F9EE!important;border-color:#BCE8C8!important;color:#176B35!important}.cats-tabs .cats-tab:nth-child(3){background:#EAF4FF!important;border-color:#C4DFFF!important;color:#175C9E!important}.cats-tabs .cats-tab:nth-child(4){background:#FFF5D9!important;border-color:#F2D98F!important;color:#815A00!important}.cats-tabs .cats-tab:nth-child(5){background:#F3EAFF!important;border-color:#D8C1F6!important;color:#64329A!important}.cats-tabs .cats-tab:nth-child(6){background:#FFF0F0!important;border-color:#F3C4C4!important;color:#9B2C2C!important}.cats-tabs .cats-tab:nth-child(7){background:#FFEAF3!important;border-color:#F5C1D6!important;color:#9C2857!important}.cats-tabs .cats-tab:nth-child(8){background:#E8F7F7!important;border-color:#BCE3E3!important;color:#176565!important}.cats-tabs .cats-tab:nth-child(9){background:#F4EEFF!important;border-color:#D8C8F5!important;color:#633C9B!important}.cats-tabs .cats-tab:nth-child(10){background:#FFE9F0!important;border-color:#F5BCD0!important;color:#A51D50!important}.cats-tabs .cats-tab:nth-child(11){background:#E8F1FF!important;border-color:#BDD2F5!important;color:#294F91!important}.cats-tabs .cats-tab:nth-child(12){background:#FFF7D9!important;border-color:#ECD991!important;color:#725C00!important}.cats-tabs .cats-tab:nth-child(13){background:#EAFBF5!important;border-color:#BCE9D8!important;color:#17684F!important}.cats-tabs .cats-tab:nth-child(14){background:#FFF0E5!important;border-color:#F0C9A9!important;color:#914711!important}.cats-tabs .cats-tab:nth-child(15){background:#EEF0FF!important;border-color:#CBCFF4!important;color:#3F4596!important}.cats-tabs .cats-tab:hover,.cats-tabs .cats-tab.active{filter:saturate(1.18);border-color:currentColor!important;transform:translateX(3px)!important}
+.cats-section .cats-tabs .cats-tab{background:#fff!important;border-color:#D9DEE7!important;color:#172033!important;box-shadow:0 4px 10px rgba(16,24,40,.06)!important}.cats-section .cats-tabs .cats-tab:hover,.cats-section .cats-tabs .cats-tab.active{background:#FFF4E8!important;border-color:#FF6B1A!important;color:#C2410C!important;filter:none!important}
+:root{--ff:"Segoe UI",Arial,Helvetica,sans-serif!important;--fb:"Segoe UI",Arial,Helvetica,sans-serif!important}
+body,button,input,select,textarea,.nav-logo,.nav-logo .l,.nav-logo .s,.sec-title,.modal-title,.profile-name{font-family:"Segoe UI",Arial,Helvetica,sans-serif!important}
+.cats-tabs .cats-tab{font-family:"Segoe UI",Arial,Helvetica,sans-serif!important;font-weight:700!important;letter-spacing:0!important}.category-emoji{display:none!important}.cat-label{font-family:"Segoe UI",Arial,Helvetica,sans-serif!important;font-weight:700!important}
+.cats-scroller .cat-card{padding:10px 10px 14px!important;border-radius:18px!important;background:var(--cat-bg,#FFF3EC)!important;border:2px solid color-mix(in srgb,var(--cat-accent,#FF6B1A) 24%,transparent)!important;box-shadow:0 8px 20px rgba(16,24,40,.07)!important;gap:10px!important}.cats-scroller .cat-card:hover,.cats-scroller .cat-card.active-cat{border-color:var(--cat-accent)!important;box-shadow:0 14px 28px color-mix(in srgb,var(--cat-accent) 18%,transparent)!important}
+.cats-scroller .cat-icon-wrap{border:3px solid rgba(255,255,255,.88)!important;box-shadow:0 6px 16px rgba(16,24,40,.12)!important}.category-emoji{position:absolute!important;left:8px!important;top:8px!important;width:34px;height:34px;display:grid!important;place-items:center;background:#fff;border-radius:10px;font-size:1.05rem!important;box-shadow:0 4px 12px rgba(16,24,40,.15);z-index:3!important}.cat-helper{display:block;margin-top:4px;font-size:.67rem;font-weight:750;color:var(--cat-accent);line-height:1.25}.cat-card-all .cat-all-art{background:linear-gradient(135deg,#172554,#2563EB)!important}.cat-card-all .category-emoji{position:static!important;width:54px;height:54px;font-size:1.7rem!important;color:#172554}.category-count{position:absolute;right:9px;bottom:8px;padding:4px 7px;border-radius:7px;background:#fff;color:#172554;font-size:.58rem;font-weight:900;letter-spacing:.1em}
+.category-list-all{grid-column:1/-1}.category-list-all button{width:100%;display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;text-align:left;padding:16px;border:0;border-radius:16px;background:linear-gradient(135deg,#172554,#2563EB);color:#fff;font-family:var(--fb);cursor:pointer;box-shadow:0 12px 24px rgba(37,99,235,.22)}.category-list-all button>span{grid-row:1/3;width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.16);font-size:1.3rem}.category-list-all strong{font-size:.9rem}.category-list-all small{font-size:.68rem;opacity:.78;margin-top:2px}
+@media(min-width:901px){
+  .cats-section{height:calc(100dvh - 108px)!important;max-height:calc(100dvh - 108px)!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;scrollbar-color:#F3192D #F1F3F6!important;padding-right:8px!important}
+  .cats-section::-webkit-scrollbar{display:block!important;width:7px!important}
+  .cats-section::-webkit-scrollbar-track{background:#F1F3F6!important;border-radius:999px!important}
+  .cats-section::-webkit-scrollbar-thumb{background:#F3192D!important;border-radius:999px!important;border:2px solid #F1F3F6!important}
+  .cats-section::-webkit-scrollbar-thumb:hover{background:#C81022!important}
+  .cats-tabs{overflow:visible!important;height:auto!important;max-height:none!important;padding-bottom:14px!important}
+}
+@media(max-width:900px){
+  .cats-section{position:relative!important;top:auto!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;margin-bottom:22px!important;padding-bottom:14px!important;contain:layout!important}
+  .cats-header,.cats-tabs{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+  .quick-category-finder{position:relative!important;z-index:0!important;clear:both!important;margin-top:0!important}
+}
+@media(max-width:560px){.address-card{flex-direction:column}.address-actions{justify-content:flex-start}.cats-list-control{display:grid!important;grid-template-columns:1fr!important;gap:5px!important;margin:0 0 12px!important}.cats-list-control .cats-list-btn{height:38px!important;min-width:0!important;padding:0 10px!important;font-size:.68rem!important}.cats-list-control .cats-list-btn svg{width:13px!important;height:13px!important;flex:0 0 13px!important}.cats-header{display:block!important}.cats-tabs{display:flex!important;flex-direction:column!important;overflow:visible!important;gap:8px!important;padding:0!important}.cats-tabs .cats-tab{width:100%!important;min-height:40px!important;padding:9px 12px!important;flex:0 0 auto!important;border-radius:11px!important;font-size:.74rem!important;text-align:left!important;justify-content:flex-start!important}}
 </style>
 <script>
 // Multiple delivery addresses, shared by Profile and Checkout.
@@ -4042,6 +4082,12 @@ function addCurrentAddress(){
   var a={id:'addr-'+Date.now(),label:(prompt('Address label (Home, Work, etc.)','Home')||'Address').trim(),address:document.getElementById('edit-addr').value.trim(),city:document.getElementById('edit-city').value.trim(),pin:document.getElementById('edit-pin').value.trim(),landmark:document.getElementById('edit-land').value.trim(),isDefault:false};
   if(!a.address||!a.city||!/^[0-9]{6}$/.test(a.pin)){toast('Enter street, city and a valid 6-digit pincode first','err');return;}
   var list=getAddressBook();if(!list.length)a.isDefault=true;list.push(a);setAddressBook(list);renderAddressBook();toast('Address added');
+}
+function browseAllProducts(){
+  _activeCategory='';_activeSubCategory='';_searchTerm='';
+  var search=document.getElementById('search-inp');if(search)search.value='';
+  document.querySelectorAll('.cat-card,.cats-tab').forEach(function(el){el.classList.remove('active-cat','active','preview');});
+  closeAllCategoryList();renderCategorySubfilters('');setShopView('products');renderShops();renderNewProducts();showProductResults();
 }
 function useSavedAddress(id,target){var list=getAddressBook(),a=list.find(function(x){return x.id===id;});if(!a)return;if(target==='profile'){document.getElementById('edit-addr').value=a.address;document.getElementById('edit-city').value=a.city;document.getElementById('edit-pin').value=a.pin;document.getElementById('edit-land').value=a.landmark||'';}else{document.getElementById('del-addr1').value=a.address;document.getElementById('del-city').value=a.city;document.getElementById('del-pin').value=a.pin;document.getElementById('del-landmark').value=a.landmark||'';}toast(a.label+' address selected');}
 function makeDefaultAddress(id){var list=getAddressBook().map(function(a){a.isDefault=a.id===id;return a;});setAddressBook(list);renderAddressBook();if(document.getElementById('checkout-address-list'))renderCheckoutAddresses();}
