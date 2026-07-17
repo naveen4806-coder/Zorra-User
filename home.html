@@ -1522,7 +1522,7 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
 @media(max-width:760px){.nav-rewards-link{display:none}}
 
 /* Keep visiting-card copy readable over category photography */
-.quick-category-card{--qc-bg:#f7d9e2}.quick-category-card::after{z-index:1;background:linear-gradient(90deg,var(--qc-bg) 0%,var(--qc-bg) 43%,color-mix(in srgb,var(--qc-bg) 82%,transparent) 58%,transparent 78%);pointer-events:none}.quick-category-card img{z-index:0;width:58%;object-position:center;opacity:1}.quick-category-card .qc-copy{z-index:2;max-width:58%}.quick-category-card strong{font-size:1.18rem;line-height:1.12;text-wrap:balance}.qc-fashion{--qc-bg:#f7d9e2}.qc-kids{--qc-bg:#ffd943}.qc-grocery{--qc-bg:#54d1b8}.qc-food{--qc-bg:#ffb85a}.qc-meat{--qc-bg:#f5d4d4}
+.quick-category-card{--qc-bg:#f7d9e2}.quick-category-card::after{z-index:1;background:linear-gradient(90deg,var(--qc-bg) 0%,var(--qc-bg) 43%,color-mix(in srgb,var(--qc-bg) 82%,transparent) 58%,transparent 78%);pointer-events:none}.quick-category-card img{z-index:0;width:58%;object-position:center;opacity:1}.quick-category-card .qc-copy{z-index:2;max-width:58%}.quick-category-card strong{font-size:1.18rem;line-height:1.12;text-wrap:balance}.qc-fashion{--qc-bg:#f7d9e2}.qc-kids{--qc-bg:#ffd943}.qc-grocery{--qc-bg:#54d1b8}.qc-food{--qc-bg:#ffb85a}.qc-meat{--qc-bg:#f5d4d4}.qc-health{--qc-bg:#dceeff}.qc-womens-care{--qc-bg:#f9dce8}
 /* Final NexCart search action color */
 .search-box button{background:#E53935!important;color:#fff!important;border:0!important;box-shadow:0 6px 16px rgba(229,57,53,.24)!important}
 .search-box button:hover{background:#C62828!important;color:#fff!important}
@@ -1822,6 +1822,14 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,25,45,.24),tra
       <button class="quick-category-card qc-meat" data-fallback="🍗" type="button" onclick="filterByShopCategory('Meat &amp; Seafood',true)">
         <span class="qc-copy"><strong>Fresh cuts,<br>delivered safely</strong><small>Meat &amp; seafood</small><span class="qc-action">Explore now</span></span>
         <img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Fresh meat and seafood" onerror="this.style.display='none';this.parentElement.classList.add('qc-image-failed')">
+      </button>
+      <button class="quick-category-card qc-health" type="button" onclick="filterByShopCategory('Health',true)">
+        <span class="qc-copy"><strong>Everyday health,<br>delivered quickly</strong><small>Fever, cold, pain, first aid &amp; personal care</small><span class="qc-action">Explore health</span></span>
+        <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Health and wellness products" onerror="this.style.display='none';this.parentElement.classList.add('qc-image-failed')">
+      </button>
+      <button class="quick-category-card qc-womens-care" type="button" onclick="filterByShopCategory(&quot;Women's Care&quot;,true)">
+        <span class="qc-copy"><strong>Women's care,<br>with comfort</strong><small>Sanitary pads, period care &amp; hygiene</small><span class="qc-action">Explore care</span></span>
+        <img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Women's personal care products" onerror="this.style.display='none';this.parentElement.classList.add('qc-image-failed')">
       </button>
     </div>
   </section>
@@ -2883,8 +2891,9 @@ var CATEGORY_SUBFILTERS={
     {group:'Comfort & Hygiene',items:['Intimate Hygiene','Period Pain Relief']}
   ],
   'Health':[
-    {group:'Common Health Needs',items:['Fever','Cold','Body Pain Relief','Headache']},
-    {group:'Ongoing & Personal Care',items:['Diabetes Care','Condoms']}
+    {group:'Pain & Common Illness',items:['Fever','Cold','Body Pain','Headache','Stomach Pain']},
+    {group:'Digestive Care',items:['Dysentery','Food Poisoning']},
+    {group:'First Aid & Personal Care',items:['Condoms','Bandages','Itch Ointments']}
   ],
   'Fashion & Clothing':[
     {group:'Mens Daily Wear',items:['Cotton Shirts','T-Shirts & Polos','Trousers & Jeans','Lungi + Shirt Combos']},
@@ -3020,7 +3029,7 @@ function selectSubCategory(sub){
   _activeSubCategory=sub||'';
   _previewCategory='';
   renderCategorySubfilters(_activeCategory);
-  setShopView('products');
+  setShopView('list');
   renderShops();
   renderNewProducts();
   showProductResults();
@@ -3307,7 +3316,7 @@ function filterByShopCategory(cat,directToProducts){
   if(_activeCategory){document.querySelectorAll('.cat-card').forEach(function(el){var onclick=el.getAttribute('onclick')||'';if(onclick.indexOf(cat.replace(/&amp;/g,'&').replace(/'/g,''))!==-1||onclick.indexOf(cat)!==-1)el.classList.add('active-cat');});}
   updateCategoryTabs(_activeCategory);
   renderCategorySubfilters(directToProducts?'':_activeCategory);
-  setShopView('products');
+  setShopView('list');
   renderShops();
   renderNewProducts();
   if(directToProducts||_activeCategory)showProductResults();
@@ -4087,7 +4096,7 @@ function browseAllProducts(){
   _activeCategory='';_activeSubCategory='';_searchTerm='';
   var search=document.getElementById('search-inp');if(search)search.value='';
   document.querySelectorAll('.cat-card,.cats-tab').forEach(function(el){el.classList.remove('active-cat','active','preview');});
-  closeAllCategoryList();renderCategorySubfilters('');setShopView('products');renderShops();renderNewProducts();showProductResults();
+  closeAllCategoryList();renderCategorySubfilters('');setShopView('list');renderShops();renderNewProducts();showProductResults();
 }
 function useSavedAddress(id,target){var list=getAddressBook(),a=list.find(function(x){return x.id===id;});if(!a)return;if(target==='profile'){document.getElementById('edit-addr').value=a.address;document.getElementById('edit-city').value=a.city;document.getElementById('edit-pin').value=a.pin;document.getElementById('edit-land').value=a.landmark||'';}else{document.getElementById('del-addr1').value=a.address;document.getElementById('del-city').value=a.city;document.getElementById('del-pin').value=a.pin;document.getElementById('del-landmark').value=a.landmark||'';}toast(a.label+' address selected');}
 function makeDefaultAddress(id){var list=getAddressBook().map(function(a){a.isDefault=a.id===id;return a;});setAddressBook(list);renderAddressBook();if(document.getElementById('checkout-address-list'))renderCheckoutAddresses();}
