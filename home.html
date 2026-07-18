@@ -1620,7 +1620,6 @@ nav::before{background:linear-gradient(90deg,transparent,rgba(243,53,32,.24),tra
     </ul>
     <div class="nav-spacer"></div>
     <div class="nav-actions">
-      <a class="nav-download-app" href="./Zorra-Android.apk" target="_blank" rel="noopener" type="application/vnd.android.package-archive" aria-label="Download Zorra Android app" onclick="return startZorraApkDownload(event)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14"/></svg><span>Download App</span></a>
       <div class="guest-auth-actions" id="guest-auth-actions">
         <a class="guest-auth-link" id="guest-signup-link" href="home.html?auth=signup" onclick="openAuthModal('signup');return false;">New here?</a>
         <a class="guest-auth-link guest-auth-primary" id="guest-login-link" href="home.html?auth=login" onclick="openAuthModal('login');return false;">Login</a>
@@ -4156,16 +4155,56 @@ var _checkoutWithAddresses=checkoutCart;checkoutCart=function(){_checkoutWithAdd
 var _saveProfileWithAddresses=saveProfile;saveProfile=async function(){await _saveProfileWithAddresses();var addr=document.getElementById('edit-addr').value.trim(),city=document.getElementById('edit-city').value.trim(),pin=document.getElementById('edit-pin').value.trim(),land=document.getElementById('edit-land').value.trim();if(addr&&city&&/^[0-9]{6}$/.test(pin)){var list=getAddressBook(),d=list.find(function(a){return a.isDefault;});if(d){d.address=addr;d.city=city;d.pin=pin;d.landmark=land;}else list.push({id:'addr-'+Date.now(),label:'Home',address:addr,city:city,pin:pin,landmark:land,isDefault:true});setAddressBook(list);renderAddressBook();if(auth.currentUser)db.collection('users').doc(auth.currentUser.uid).set({addresses:list},{merge:true}).catch(function(){});}};
 </script>
 <script src="nexcart-notifications.js"></script>
-<style id="zorra-supplied-logo-final">.nav-logo{width:58px!important;min-width:58px!important;max-width:58px!important;padding:5px!important;background:transparent!important}.nav-logo-inline{width:46px!important;height:46px!important;padding:0!important;flex:0 0 46px!important;background:url("zorra-logo.jpeg") center/cover no-repeat!important;border-radius:12px!important}.nav-logo-inline>*{display:none!important}.nav-logo-inline::after{display:none!important}.footer-brand-inline{width:76px!important;height:76px!important;padding:0!important;background:url("zorra-logo.jpeg") center/cover no-repeat!important;border-radius:18px!important}.footer-brand-inline>*{display:none!important}.footer-brand-inline::after{display:none!important}.nx-loader-logo{background-image:url("zorra-logo.jpeg")!important}@media(max-width:760px){.nav-logo{width:50px!important;min-width:50px!important;max-width:50px!important;flex-basis:50px!important}.nav-logo-inline{width:40px!important;height:40px!important;flex-basis:40px!important;background-size:cover!important}}</style>
-<script id="zorra-apk-download-handler">
-function startZorraApkDownload(event){
-  if(location.protocol==='file:'){
-    event.preventDefault();
-    alert('Mobile download needs the Zorra website to be opened from an HTTP or HTTPS address. Upload the outputs folder to your web hosting, then this button will download the APK.');
-    return false;
-  }
-  return true;
-}
+<style id="zorra-inline-brand-final">
+.zorra-inline-svg{display:block!important;visibility:visible!important;opacity:1!important;width:100%;height:100%;flex:0 0 auto}
+.nav-logo-inline,.footer-brand-inline,.nx-loader-logo,.al-logo-mark,.tb-mark,.zorra-mark{background:none!important;background-image:none!important}
+.nav-logo-inline>*,.footer-brand-inline>*,.al-logo-mark>*,.tb-mark>*{display:block!important}
+.nav-logo-inline{display:flex!important;align-items:center!important;gap:9px!important;width:148px!important;height:46px!important;padding:0!important}
+.nav-logo-inline .zorra-inline-svg{width:46px!important;height:46px!important}
+.footer-brand-inline{display:flex!important;align-items:center!important;gap:10px!important;width:172px!important;height:62px!important;padding:0!important}
+.footer-brand-inline .zorra-inline-svg{width:62px!important;height:62px!important}
+.zorra-inline-name{display:inline-block!important;color:#fff!important;font:900 1rem/1 "Segoe UI",Arial,sans-serif!important;letter-spacing:.14em!important;white-space:nowrap}
+.nx-loader-logo{display:grid!important;place-items:center!important;font-size:0!important}
+.nx-loader-logo .zorra-inline-svg{width:100%!important;height:100%!important}
+.logo::before,.top .brand::before{display:none!important}
+.logo>.zorra-inline-svg,.top .brand>.zorra-inline-svg{display:block!important;width:46px!important;height:46px!important;flex:0 0 46px!important;border-radius:12px}
+.al-logo-mark .zorra-inline-svg,.tb-mark .zorra-inline-svg,.zorra-mark .zorra-inline-svg{display:block!important;width:100%!important;height:100%!important}
+</style>
+<script id="zorra-inline-brand-script">
+(function(){
+  var svg='<svg class="zorra-inline-svg" viewBox="0 0 100 100" role="img" aria-label="Zorra logo" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#071A3D"/><path d="M17 35h23M12 47h23M8 59h23" stroke="#F33520" stroke-width="6" stroke-linecap="round"/><path d="M39 21h43L55 50h25L37 82H20l27-25H28l32-27H39z" fill="#fff"/><path d="M27 78h48" stroke="#F33520" stroke-width="5" stroke-linecap="round"/><circle cx="43" cy="87" r="5" fill="#F33520"/><circle cx="66" cy="87" r="5" fill="#F33520"/></svg>';
+  function setMark(selector,withName){document.querySelectorAll(selector).forEach(function(el){el.innerHTML=svg+(withName?'<span class="zorra-inline-name">ZORRA</span>':'');});}
+  setMark('.nav-logo-inline',true);
+  setMark('.footer-brand-inline',true);
+  setMark('.nx-loader-logo',false);
+  setMark('.al-logo-mark,.tb-mark,.zorra-mark',false);
+  document.querySelectorAll('.logo').forEach(function(el){if(!el.querySelector('.zorra-inline-svg'))el.insertAdjacentHTML('afterbegin',svg);});
+  document.querySelectorAll('.top .brand').forEach(function(el){var img=el.querySelector('img');if(img)img.style.display='none';if(!el.querySelector('.zorra-inline-svg'))el.insertAdjacentHTML('afterbegin',svg);});
+})();
+</script>
+<style id="zorra-exact-logo-final">
+.zorra-exact-logo{display:block!important;visibility:visible!important;opacity:1!important;object-fit:cover!important;border-radius:12px!important}
+.nav-logo{width:58px!important;min-width:58px!important;max-width:58px!important;padding:5px!important}
+.nav-logo-inline{display:flex!important;width:46px!important;height:46px!important;padding:0!important;background:none!important}
+.nav-logo-inline::after{display:none!important;content:none!important}
+.nav-logo-inline .zorra-exact-logo{width:46px!important;height:46px!important}
+.footer-brand-inline{display:block!important;width:76px!important;height:76px!important;padding:0!important;background:none!important}
+.footer-brand-inline::after{display:none!important;content:none!important}
+.footer-brand-inline .zorra-exact-logo{width:76px!important;height:76px!important}
+.nx-loader-logo{background:none!important}
+.nx-loader-logo .zorra-exact-logo{width:100%!important;height:100%!important}
+.al-logo-mark .zorra-exact-logo,.tb-mark .zorra-exact-logo,.zorra-mark .zorra-exact-logo{width:100%!important;height:100%!important}
+.logo::before,.top .brand::before{display:none!important}
+.logo>.zorra-exact-logo,.top .brand>.zorra-exact-logo{width:48px!important;height:48px!important;flex:0 0 48px!important}
+@media(max-width:760px){.nav-logo{width:50px!important;min-width:50px!important;max-width:50px!important;flex-basis:50px!important}.nav-logo-inline,.nav-logo-inline .zorra-exact-logo{width:40px!important;height:40px!important}}
+</style>
+<script id="zorra-exact-logo-script">
+(function(){
+  var image='<img class="zorra-exact-logo" src="zorra-logo.jpeg" alt="Zorra">';
+  document.querySelectorAll('.nav-logo-inline,.footer-brand-inline,.nx-loader-logo,.al-logo-mark,.tb-mark,.zorra-mark').forEach(function(el){el.innerHTML=image;});
+  document.querySelectorAll('.logo').forEach(function(el){el.querySelectorAll('.zorra-inline-svg').forEach(function(x){x.remove();});if(!el.querySelector('.zorra-exact-logo'))el.insertAdjacentHTML('afterbegin',image);});
+  document.querySelectorAll('.top .brand').forEach(function(el){var old=el.querySelector('img');if(old)old.remove();el.querySelectorAll('.zorra-inline-svg').forEach(function(x){x.remove();});if(!el.querySelector('.zorra-exact-logo'))el.insertAdjacentHTML('afterbegin',image);});
+})();
 </script>
 </body>
 </html>
