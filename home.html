@@ -3850,7 +3850,7 @@ function openDelConfirmModal(orderId){
     if(!doc.exists)return;var o=Object.assign({id:doc.id},doc.data());
     var isCart=o.type==='cart'&&o.items&&o.items.length>1;
     var name=isCart?o.items.length+' items from '+o.shopName:o.productName;
-    document.getElementById('dcm-order-name').textContent=name;document.getElementById('dcm-order-shop').textContent=o.shopName;document.getElementById('dcm-order-total').textContent='â‚¹'+o.total;document.getElementById('dcm-order-icon').textContent=isCart?'ðŸ›’':prodIco(o.category);
+    document.getElementById('dcm-order-name').textContent=name;document.getElementById('dcm-order-shop').textContent=o.shopName;document.getElementById('dcm-order-total').textContent='Final: ₹'+zorraCustomerFinalTotal(o).toLocaleString('en-IN');document.getElementById('dcm-order-icon').textContent=isCart?'ðŸ›’':prodIco(o.category);
   }).catch(function(){});
   document.getElementById('del-confirm-modal').classList.add('open');document.body.style.overflow='hidden';
 }
