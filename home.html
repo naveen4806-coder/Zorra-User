@@ -3734,7 +3734,7 @@ function getOrderAgeDays(order){
   if(!t)return 0;
   return Math.max(0,Math.round((Date.now()-t)/(1000*60*60*24)));
 }
-function canTrackOrder(order){return ['Confirmed','Processing','Preparing','Picked Up','Out for Delivery'].indexOf(order.status)>=0;}
+function canTrackOrder(order){return ['Confirmed','Processing','Preparing','Packed','Ready for Pickup','Picked Up','Out for Delivery'].indexOf(order.status)>=0;}
 function canCancelOrder(order){return order.status==='Confirmed';}
 function canRequestReturnRefund(order){return order.status==='Delivered'&&getOrderAgeDays(order)<=7;}
 function filterOrders(orders){
@@ -3865,10 +3865,10 @@ function customerConfirmReceived(received){
 
 // ====== TRACK ORDER ======
 var ORDER_STATUSES=[{key:'Confirmed',label:'Order Confirmed',icon:'1',sub:'Your order has been received by the shop.'},{key:'Preparing',label:'Preparing Your Order',icon:'2',sub:'The shop is packing your items.'},{key:'Picked Up',label:'Picked Up',icon:'3',sub:'Delivery partner has picked up your order.'},{key:'Out for Delivery',label:'Out for Delivery',icon:'4',sub:'Your order is nearby. Almost there!'},{key:'Delivered',label:'Delivered',icon:'5',sub:'Order delivered successfully. Enjoy!'}];
-function normalizeTrackStatus(s){return s==='Processing'?'Preparing':s;}
+function normalizeTrackStatus(s){return s==='Processing'||s==='Packed'||s==='Ready for Pickup'?'Preparing':s;}
 function getStatusIndex(s){return ORDER_STATUSES.findIndex(function(x){return x.key===normalizeTrackStatus(s);});}
-var PROG={'Confirmed':0.02,'Preparing':0.05,'Processing':0.05,'Picked Up':0.35,'Out for Delivery':0.75,'Delivered':1,'Cancelled':0};
-var ETA={'Confirmed':55,'Preparing':45,'Processing':45,'Picked Up':30,'Out for Delivery':10,'Delivered':0,'Cancelled':0};
+var PROG={'Confirmed':0.02,'Preparing':0.05,'Processing':0.05,'Packed':0.12,'Ready for Pickup':0.18,'Picked Up':0.35,'Out for Delivery':0.75,'Delivered':1,'Cancelled':0};
+var ETA={'Confirmed':55,'Preparing':45,'Processing':45,'Packed':35,'Ready for Pickup':30,'Picked Up':30,'Out for Delivery':10,'Delivered':0,'Cancelled':0};
 function validTrackCoord(lat,lng){lat=Number(lat);lng=Number(lng);return isFinite(lat)&&isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180&&!(lat===0&&lng===0);}
 function routeEstimate(order){var status=normalizeTrackStatus(order.status),sl=Number(order.shopLat),sn=Number(order.shopLng),dl=Number(order.deliveryLat),dn=Number(order.deliveryLng);if(status==='Delivered')return{label:'Delivered!',detail:'Delivery completed'};if(!validTrackCoord(sl,sn)||!validTrackCoord(dl,dn))return{label:'Calculating',detail:'Waiting for valid shop and delivery locations'};var km=haversine(sl,sn,dl,dn),travel=Math.max(2,Math.ceil(km/20*60)),prep=status==='Confirmed'?15:status==='Preparing'?10:status==='Ready for Pickup'?5:0;return{label:(prep+travel)+'-'+(prep+travel+5)+' min',detail:km.toFixed(1)+' km route - '+(order.deliveryPartnerId?'rider assigned':'waiting for rider assignment')};}
 function simPos(order,frac){var sLat=order.shopLat||(order.deliveryLat?order.deliveryLat-0.04:11.02);var sLng=order.shopLng||(order.deliveryLng?order.deliveryLng-0.02:76.97);var dLat=order.deliveryLat||11.0168,dLng=order.deliveryLng||76.9558;var w=0.0005*(Math.random()-.5);return{lat:sLat+(dLat-sLat)*frac+w,lng:sLng+(dLng-sLng)*frac+w};}
@@ -4207,6 +4207,7 @@ var _saveProfileWithAddresses=saveProfile;saveProfile=async function(){await _sa
 })();
 </script>
 <style id="zorra-checkout-safety-css">
+.btn-track-order{font-size:0!important;min-width:142px;justify-content:center!important;background:linear-gradient(135deg,#071a3d,#123c79)!important}.btn-track-order:before{content:"";width:8px;height:8px;border-radius:50%;background:#42e883;box-shadow:0 0 0 4px rgba(66,232,131,.18);animation:zorraTrackPulse 1.4s infinite}.btn-track-order:after{content:"Live Track Order";font-size:.74rem}.order-card:has(.btn-track-order){border-color:rgba(18,60,121,.18)}@keyframes zorraTrackPulse{50%{box-shadow:0 0 0 8px rgba(66,232,131,0)}}
 .zh-proof{margin-top:14px;padding:14px;border:1px solid #f3b6ad;background:#fff7f5;border-radius:14px}.zh-proof h4{font-size:.86rem;margin-bottom:5px}.zh-proof p{font-size:.72rem;color:var(--mid);line-height:1.45;margin-bottom:9px}.zh-proof input{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff}.zh-fee{display:flex;justify-content:space-between;padding:8px 0;color:var(--mid);font-size:.78rem}.zh-closed{display:inline-flex;padding:4px 8px;border-radius:99px;background:#fee2e2;color:#b91c1c;font-size:.68rem;font-weight:800}
 </style>
 <script id="zorra-checkout-safety-js">
