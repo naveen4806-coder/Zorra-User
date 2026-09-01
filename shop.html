@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Cpath d='M14 48V16h9l18 20V16h9v32h-9L23 28v20z' fill='%23E53935'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Cpath d='M14 16h36v8L27 40h23v8H14v-8l23-16H14z' fill='%23ED1224'/%3E%3C/svg%3E">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Shop - Nexcart</title>
-  <meta name="description" content="View shop details and products on Nexcart.">
+  <title>Shop | Zorra</title>
+  <meta name="description" content="Browse a nearby Zorra shop, view vendor products and order locally.">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -168,10 +168,11 @@ function productUrl(p){
 function showNotFound(){document.getElementById('not-found').style.display='block';document.getElementById('page').style.display='none';}
 function showPage(){document.getElementById('not-found').style.display='none';document.getElementById('page').style.display='block';renderShop();renderProducts();}
 function trySnapshot(shopId){
-  var s=readJ('ls_last_shop',null);
-  if(!s||s.id!==shopId)return false;
+  var catalogueShops=readJ('ls_catalog_shops',[]),catalogueProducts=readJ('ls_catalog_products',[]);
+  var s=catalogueShops.find(function(shop){return String(shop.id)===String(shopId);})||readJ('ls_last_shop',null);
+  if(!s||String(s.id)!==String(shopId))return false;
   _shop=s;
-  _products=(readJ('ls_last_shop_products',[])||[]).filter(function(p){return p.shopId===shopId;});
+  _products=(catalogueProducts.length?catalogueProducts:readJ('ls_last_shop_products',[])||[]).filter(function(p){return String(p.shopId)===String(shopId);});
   showPage();
   return true;
 }
@@ -186,7 +187,7 @@ function loadShop(shopId){
   }).catch(function(){if(!trySnapshot(shopId))showNotFound();});
 }
 function renderShop(){
-  document.title=(_shop.name||'Shop')+' - Nexcart';
+  document.title=(_shop.name||'Shop')+' | Zorra';
   document.getElementById('shop-name').textContent=_shop.name||'Shop';
   document.getElementById('shop-category').textContent=_shop.category||'Local Shop';
   document.getElementById('shop-rating').textContent=(_shop.rating||4.5)+' / 5';
@@ -195,7 +196,7 @@ function renderShop(){
   document.getElementById('product-count').textContent=_products.length+' '+itemLabel(_products.length);
   document.getElementById('shop-offer').textContent=_shop.offer||_shop.tagline||('Browse '+(_shop.category||'local')+' products from this shop.');
   document.getElementById('shop-fallback').textContent=(_shop.name||'Shop').slice(0,2).toUpperCase();
-  var img=(_shop.image||_shop.photo||_shop.logo||_shop.cover||'').trim?String(_shop.image||_shop.photo||_shop.logo||_shop.cover||'').trim():'';
+  var img=(_shop.logo||_shop.shopLogo||_shop.logoUrl||_shop.image||_shop.photo||_shop.cover||'').trim?String(_shop.logo||_shop.shopLogo||_shop.logoUrl||_shop.image||_shop.photo||_shop.cover||'').trim():'';
   if(img){var el=document.getElementById('shop-img'),fallback=document.getElementById('shop-fallback');el.alt=_shop.name||'Shop';el.onload=function(){el.style.display='block';fallback.style.display='none';};el.onerror=function(){el.style.display='none';fallback.style.display='flex';};el.src=img;}
   if(_shop.phone){var call=document.getElementById('call-btn');call.href='tel:'+_shop.phone;call.style.display='inline-flex';}
 }
@@ -211,13 +212,12 @@ function renderProducts(){
     var eta=(p.deliveryTime||'28 - 32 min');
     return '<a class="card" href="'+productUrl(p)+'">'+
       '<div class="pic"><span class="wish"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.2l7.7-7.7 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>'+(img?'<img src="'+eh(img)+'" alt="'+eh(p.name||'Product')+'" loading="lazy">':eh(prodIcon(p.category)))+'</div>'+
-      '<div class="body"><div class="shopline">'+eh(_shop.name||'Nexcart')+'</div><div class="name">'+eh(p.name||'Product')+'</div><div class="price-row"><span class="price">&#8377;'+price.toLocaleString('en-IN')+'</span>'+(oldPrice&&oldPrice>price?'<span class="old-price">&#8377;'+oldPrice.toLocaleString('en-IN')+'</span>':'')+'</div><div class="cat">&#9734; '+eh(rating)+' - '+eh(eta)+'</div><div class="foot"><span class="view">View Product</span></div></div>'+
+      '<div class="body"><div class="shopline">'+eh(_shop.name||'Zorra Shop')+'</div><div class="name">'+eh(p.name||'Product')+'</div><div class="price-row"><span class="price">&#8377;'+price.toLocaleString('en-IN')+'</span>'+(oldPrice&&oldPrice>price?'<span class="old-price">&#8377;'+oldPrice.toLocaleString('en-IN')+'</span>':'')+'</div><div class="cat">&#9734; '+eh(rating)+' - '+eh(eta)+'</div><div class="foot"><span class="view">View Product</span></div></div>'+
     '</a>';
   }).join('');
 }
 window.addEventListener('load',function(){var id=param('id');if(!id){showNotFound();return;}loadShop(id);});
 </script>
-<script src="nexcart-notifications.js"></script>
 <style id="zorra-shop-trust-style">.zorra-verified{display:inline-flex;align-items:center;justify-content:center;margin-left:7px;width:19px;height:19px;border-radius:50%;background:#1473e6;color:#fff;font-size:12px;font-weight:900;vertical-align:middle;box-shadow:0 0 0 2px #e7f1ff}</style>
 <script id="zorra-shop-trust-badge">(function(){var base=window.renderShop||renderShop;window.renderShop=function(){var r=base.apply(this,arguments),n=document.getElementById('shop-name');if(_shop&&n&&(_shop.verificationStatus==='verified'||_shop.adminVerified===true)&&!n.querySelector('.zorra-verified'))n.insertAdjacentHTML('beforeend',' <span class="zorra-verified" title="Admin verified shop" aria-label="Admin verified shop">✓</span>');return r;};})();</script>
 <style id="zorra-production-polish">
@@ -256,5 +256,25 @@ window.setShopProductFilter=function(cat){activeFilter=cat;buildFilters();filter
 var oldShop=window.renderShop||renderShop;window.renderShop=function(){var r=oldShop.apply(this,arguments);ensureExtras();return r;};var oldProducts=window.renderProducts||renderProducts;window.renderProducts=function(){var r=oldProducts.apply(this,arguments);ensureExtras();setTimeout(decorate,0);return r;};
 })();
 </script>
+<style id="zorra-shop-final-fit">
+.nav-inner{max-width:1240px!important}.zorra-shop-brand{display:flex;align-items:center;gap:9px;color:#fff}.zorra-shop-brand-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#ED1224;color:#fff;font:900 1rem/1 var(--fb)}.zorra-shop-brand-text{font:900 1.05rem/1 var(--fb);letter-spacing:.12em}.shop-nav-actions{display:flex;align-items:center;gap:8px}.shop-nav-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:1px solid #E4E7EC;border-radius:12px;background:#fff;color:#101828;text-decoration:none;font-size:.75rem;font-weight:800}.shop-nav-link:hover{border-color:#ED1224;color:#ED1224}.shop-cart-count{display:grid;place-items:center;min-width:20px;height:20px;margin-left:6px;padding:0 5px;border-radius:999px;background:#ED1224;color:#fff;font-size:.62rem}.shop-media img{object-fit:contain!important;padding:26px;background:#fff}.wish{display:none!important}
+@media(min-width:900px){.products:not(.is-single):not(.is-two){grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:820px){.nav-inner{flex-wrap:nowrap!important}.logo{flex:0 0 auto!important;width:148px!important}.back{display:none!important}.shop-nav-actions{margin-left:auto}.shop-nav-link{padding:0 10px}.shop-nav-link:first-child{display:none}.products{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:430px){.products,.products.is-two{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pic{aspect-ratio:1/1}.body{padding:10px!important}.name{font-size:.82rem}.view{font-size:.72rem;padding:9px 7px}.shop-media img{padding:18px}.shop-nav-link{font-size:.68rem}}
+</style>
+<script id="zorra-shop-final-fit-js">
+(function(){
+ function updateShopNav(){
+  var logo=document.querySelector('.nav-inner .logo'),nav=document.querySelector('.nav-inner');
+  if(logo)logo.innerHTML='<span class="zorra-shop-brand"><span class="zorra-shop-brand-mark">Z</span><span class="zorra-shop-brand-text">ZORRA</span></span>';
+  if(nav&&!nav.querySelector('.shop-nav-actions')){
+   var cart=readJ('ls_cart',{items:[]}),count=(cart.items||[]).reduce(function(total,item){return total+(Number(item.qty)||0);},0),actions=document.createElement('div');
+   actions.className='shop-nav-actions';actions.innerHTML='<a class="shop-nav-link" href="shops.html">All Shops</a><a class="shop-nav-link" href="home.html?openCart=1">Cart <span class="shop-cart-count">'+count+'</span></a>';nav.appendChild(actions);
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',updateShopNav);else updateShopNav();
+})();
+</script>
 </body>
 </html>
+
