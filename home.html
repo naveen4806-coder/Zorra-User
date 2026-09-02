@@ -4640,5 +4640,32 @@ html,body{max-width:100%;overflow-x:hidden}.customer-home{background:var(--zr-bg
 <script id="zorra-open-settings-from-navigation">
 (function(){function openRequestedSettings(){var params=new URLSearchParams(window.location.search);if(params.get('openSettings')!=='1')return;setTimeout(function(){if(!document.body.classList.contains('settings-open')&&typeof window.toggleSettingsPanel==='function')window.toggleSettingsPanel();try{params.delete('openSettings');history.replaceState(null,'',window.location.pathname+(params.toString()?'?'+params.toString():'')+window.location.hash);}catch(error){}},180);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',openRequestedSettings);else openRequestedSettings();})();
 </script>
+<style id="zorra-apk-download-style">
+  .zorra-apk-download{position:fixed;right:18px;bottom:92px;z-index:1550;display:flex;align-items:center;gap:10px;min-height:58px;padding:9px 16px 9px 10px;border:1px solid rgba(255,255,255,.25);border-radius:18px;background:linear-gradient(135deg,#081d42 0%,#123b78 100%);color:#fff;text-decoration:none;box-shadow:0 14px 34px rgba(4,24,58,.3);transition:transform .2s ease,box-shadow .2s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .zorra-apk-download:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(4,24,58,.38)}
+  .zorra-apk-download:active{transform:scale(.97)}
+  .zorra-apk-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#ff3427;color:#fff;font-size:22px;font-weight:900}
+  .zorra-apk-copy{display:flex;flex-direction:column;line-height:1.1;white-space:nowrap}
+  .zorra-apk-copy strong{font-size:14px;font-weight:900}
+  .zorra-apk-copy small{margin-top:4px;color:#dce7ff;font-size:10px;font-weight:700}
+  @media(min-width:769px){.zorra-apk-download{bottom:24px}}
+  @media(max-width:420px){.zorra-apk-download{right:10px;bottom:84px;min-height:52px;padding:7px 12px 7px 8px;border-radius:16px}.zorra-apk-icon{width:36px;height:36px}.zorra-apk-copy strong{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.zorra-apk-download{transition:none}}
+</style>
+<a id="zorra-apk-download" class="zorra-apk-download" href="Zorra.apk" download="Zorra.apk" type="application/vnd.android.package-archive" aria-label="Download the Zorra Android app">
+  <span class="zorra-apk-icon" aria-hidden="true">↓</span>
+  <span class="zorra-apk-copy"><strong>Download Zorra App</strong><small>Android APK · 7.2 MB</small></span>
+</a>
+<script id="zorra-apk-download-behaviour">
+(function(){
+  var button=document.getElementById('zorra-apk-download');
+  if(!button)return;
+  button.addEventListener('click',function(event){
+    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(isIOS){event.preventDefault();if(typeof toast==='function')toast('The Zorra APK can only be installed on Android devices.','info');else alert('The Zorra APK can only be installed on Android devices.');return;}
+    setTimeout(function(){if(typeof toast==='function')toast('APK download started. Open the downloaded file and confirm Install.','success');},120);
+  });
+})();
+</script>
 </body>
 </html>
