@@ -20,6 +20,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 <style>
 /* ===== RESET & ROOT ===== */
@@ -2108,7 +2109,7 @@ function rewardWeekKey(){return rewardWeekStart().toISOString().slice(0,10);}
 function rewardToast(msg){var el=document.getElementById('reward-toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(rewardToast._t);rewardToast._t=setTimeout(function(){el.classList.remove('show');},4200);}
 function initRewards(){
   _rewardWeekKey=rewardWeekKey();
-  auth.onAuthStateChanged(function(user){if(!user){_rewardOrders=[];renderRewards();return;}db.collection('orders').where('customerUid','==',user.uid).onSnapshot(function(snap){_rewardOrders=[];snap.forEach(function(d){var o=Object.assign({id:d.id},d.data());if(o.status==='Delivered')_rewardOrders.push(o);});renderRewards();},function(){_rewardOrders=[];renderRewards();});});
+  auth.onAuthStateChanged(function(user){if(!user){_rewardOrders=[];renderRewards();return;}db.collection('orders').where('customerUid','==',user.uid).onSnapshot(function(snap){_rewardOrders=[];snap.forEach(function(d){var o=Object.assign({id:d.id},d.data()),status=String(o.status||'').trim().toLowerCase();if(status==='delivered'||o.customerConfirmed===true)_rewardOrders.push(o);});renderRewards();},function(error){_rewardOrders=[];renderRewards();rewardToast(error&&error.code==='permission-denied'?'Rewards need the latest Firestore rules.':'Rewards could not be refreshed.');});});
 }
 function rewardStreak(orders){var days={};orders.forEach(function(o){var d=new Date(o.deliveredAt||o.orderedAt);if(!isNaN(d))days[d.toISOString().slice(0,10)]=true;});var cursor=new Date();cursor.setHours(0,0,0,0);if(!days[cursor.toISOString().slice(0,10)])cursor.setDate(cursor.getDate()-1);var n=0;while(days[cursor.toISOString().slice(0,10)]){n++;cursor.setDate(cursor.getDate()-1);}return n;}
 function renderRewards(){
@@ -2143,7 +2144,7 @@ function eh(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&
 function safeId(s){return encodeURIComponent(String(s==null?'':s)).replace(/'/g,'%27');}
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast-pop show'+(t?' '+t:'');clearTimeout(toast._t);toast._t=setTimeout(function(){e.className='toast-pop';},3200);}
 function haversine(la1,ln1,la2,ln2){var R=6371,dLat=(la2-la1)*Math.PI/180,dLng=(ln2-ln1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-var _firebaseUser = null;  auth.onAuthStateChanged(function(user) {   _firebaseUser = user; if(user)ensureCustomerProfile(user); loadCurrentUser(); updateNavBadges(); updateCartUI(); });  function isLoggedIn(){ return !!_firebaseUser; }
+var _firebaseUser = null;  auth.onAuthStateChanged(function(user) {   _firebaseUser = user; switchCartForUser(user); if(user)ensureCustomerProfile(user); loadCurrentUser(); updateNavBadges(); updateCartUI(); if(window.NexCartNotifications&&window.NexCartNotifications.bindUser)window.NexCartNotifications.bindUser(user,db); });  function isLoggedIn(){ return !!_firebaseUser; }
 function ensureCustomerProfile(user){var ref=db.collection('users').doc(user.uid);ref.get().then(function(snap){if(snap.exists)return;var saved=ldJ('ls_user_data',{});return ref.set({uid:user.uid,name:saved.name||user.displayName||'',email:user.email||saved.email||'',phoneNumber:saved.phone||'',addresses:[],rewardPoints:0,totalOrders:0,createdAt:new Date().toISOString(),lastLogin:new Date().toISOString()});}).catch(function(e){console.warn('Customer profile setup:',e.message);});}
 function getCurrentPathWithQuery(){return (window.location.pathname.split('/').pop()||'home.html')+window.location.search+window.location.hash;}
 function buildAuthUrl(tab){var current=getCurrentPathWithQuery();return 'home.html?auth='+(tab||'login')+'&return='+encodeURIComponent(current);}
@@ -2303,7 +2304,17 @@ var delMap=null,delMarker=null,delLat=null,delLng=null,delMapInit=false;
 var trackMap=null,trackMapInit=false,trackDeliveryMarker=null,trackUserMarker=null,trackPolyline=null;
 var _trackInterval=null,_trackOrder=null,_confirmOrderId=null;
 var _ordersCache=[],_activeOrdersFilter='all';
-var _cart=ldJ('ls_cart',{shopId:null,shopName:'',items:[]});
+var EMPTY_CART={shopId:null,shopName:'',items:[]};
+var _cart=ldJ('ls_cart_guest',ldJ('ls_cart',EMPTY_CART));
+var _cartStorageOwner='guest';
+function cartStorageKey(user){return user&&user.uid?'ls_cart_user_'+user.uid:'ls_cart_guest';}
+function switchCartForUser(user){
+  var owner=user&&user.uid?user.uid:'guest';if(owner===_cartStorageOwner)return;
+  _cartStorageOwner=owner;
+  _cart=ldJ(cartStorageKey(user),{shopId:null,shopName:'',items:[]});
+  if(!_cart||!Array.isArray(_cart.items))_cart={shopId:null,shopName:'',items:[]};
+  sv('ls_cart',JSON.stringify(_cart));
+}
 var _cartModalOpen=false;
 var _cartRequested=false;
 var _currentUser=null;
@@ -3271,6 +3282,7 @@ function refreshProductCard(pid){var card=document.getElementById('pcard-'+safeI
 function toggleProductQuickView(e,pid){if(e.target.closest('button,input,a,label'))return;var card=document.getElementById('pcard-'+pid);if(!card)return;var willOpen=!card.classList.contains('show-quick');document.querySelectorAll('.prod-card.show-quick').forEach(function(el){if(el!==card)el.classList.remove('show-quick');});card.classList.toggle('show-quick',willOpen);}
 function updateCartUI(){
   var total=getCartTotal();var count=_cart.items.length;var itemCount=getCartItemCount();
+  sv(cartStorageKey(auth.currentUser),JSON.stringify(_cart));
   sv('ls_cart',JSON.stringify(_cart));
   updateNavCartBtn();
   var clearBtn=document.querySelector('#cart-modal .cart-clear-btn');
@@ -4701,6 +4713,52 @@ html,body{max-width:100%;overflow-x:hidden}.customer-home{background:var(--zr-bg
  var priorConfirm=window.confirmOrder||confirmOrder;window.confirmOrder=async function(){var items=_pendingOrder&&_pendingOrder.cart?_pendingOrder.cart.items:_cart.items,base=getBaseProductTotal(items);if(base<MINIMUM_ORDER_VALUE){toast(minimumMessage(items,true),'err');return;}return priorConfirm.apply(this,arguments);};
  if(firebase&&firebase.firestore&&firebase.firestore.CollectionReference){var proto=firebase.firestore.CollectionReference.prototype,priorAdd=proto.add;if(!proto._zorraMinimumOrderAdd){proto._zorraMinimumOrderAdd=priorAdd;proto.add=function(data){if(this.id==='orders'&&data&&data.type==='cart'&&Array.isArray(data.items)){var base=getBaseProductTotal(data.items);if(base<MINIMUM_ORDER_VALUE)return Promise.reject(new Error(minimumMessage(data.items,true)));data.minimumOrderValue=MINIMUM_ORDER_VALUE;data.baseProductTotal=base;}return priorAdd.call(this,data);};}}
  renderProgress();
+})();
+</script>
+<style id="zorra-home-reliability-ui">
+.orders-modal-card{width:min(860px,96vw)!important}.orders-shell{padding:16px!important}.orders-summary{gap:8px!important}.orders-summary-card{padding:12px!important;border-radius:14px!important;box-shadow:none!important}.orders-summary-sub{display:none!important}.orders-toolbar{margin:14px 0 10px!important}.orders-title-block p{font-size:.7rem!important}.orders-list{gap:10px!important}.order-card{padding:14px!important;border:1px solid rgba(7,26,61,.1)!important;border-radius:16px!important;box-shadow:0 5px 16px rgba(7,26,61,.06)!important}.order-ph{width:54px!important;height:54px!important;min-width:54px!important;border-radius:13px!important}.order-price-breakdown{margin-top:10px!important;padding:10px 12px!important;border-radius:12px!important;background:#f7f9fc!important}.order-price-breakdown>div{padding:3px 0!important;font-size:.72rem!important}.order-price-breakdown .final{margin-top:5px!important;padding-top:7px!important}.order-items-list{margin-top:9px!important}.order-item-li{padding:8px 0!important}.quick-category-card{touch-action:manipulation!important}.quick-category-card:active{transform:scale(.985)!important}
+@media(max-width:600px){.orders-shell{padding:10px!important}.orders-summary{grid-template-columns:repeat(4,minmax(0,1fr))!important;overflow-x:auto!important}.orders-summary-card{min-width:105px!important}.orders-summary-label{font-size:.55rem!important}.orders-summary-value{font-size:1.05rem!important}.orders-toolbar{align-items:flex-start!important;flex-direction:column!important}.orders-filters{width:100%;overflow-x:auto!important}.order-card{display:grid!important;grid-template-columns:46px minmax(0,1fr)!important;gap:10px!important}.order-ph{width:46px!important;height:46px!important;min-width:46px!important}.order-top{gap:7px!important}.order-actions{width:100%;justify-content:flex-start!important;margin-top:7px!important}.order-addr{font-size:.64rem!important}.order-meta{gap:5px!important}}
+</style>
+<script id="zorra-home-reliability-fixes">
+(function(){
+  function emptyCart(){return{shopId:null,shopName:'',items:[]};}
+
+  /* Category selection is deterministic. Repeated taps keep the category open. */
+  window.filterByShopCategory=function(cat,directToProducts){
+    cat=String(cat||'').replace(/&amp;/g,'&');
+    _activeCategory=cat;_activeSubCategory='';_previewCategory='';_searchTerm='';
+    var search=document.getElementById('search-inp');if(search)search.value='';
+    closeCategoryMenu();
+    document.querySelectorAll('.cat-card').forEach(function(el){el.classList.remove('active-cat');});
+    updateCategoryTabs(cat);renderCategorySubfilters(cat);setShopView('list');renderShops();renderNewProducts();
+    requestAnimationFrame(function(){var target=document.getElementById('new-products-section');if(target)target.scrollIntoView({behavior:'auto',block:'start'});});
+  };
+
+  /* Navigate immediately; catalog listeners on the destination load fresh data. */
+  window.goToProductPage=function(productId){if(productId)window.location.assign('product.html?id='+encodeURIComponent(productId));};
+  window.goToShopPage=function(shopId){if(shopId)window.location.assign('shop.html?id='+encodeURIComponent(shopId));};
+
+  /* One compact customer-facing price block, instead of stacked duplicate totals. */
+  window.renderOrderItemsList=function(order){
+    var html='';
+    if(order.items&&order.items.length>1){html='<div class="order-items-list">'+order.items.map(function(it){return'<div class="order-item-li"><div class="order-item-main"><div class="order-item-name">'+eh(it.name||'Item')+'</div><div class="order-item-meta">Qty '+(Number(it.qty)||1)+' · '+eh(it.category||'Item')+'</div></div><span class="order-item-price">₹'+((Number(it.customerProductPrice!=null?it.customerProductPrice:it.price)||0)*(Number(it.qty)||1)).toLocaleString('en-IN')+'</span></div>';}).join('')+'</div>';}
+    var base=Number(order.vendorBasePrice!=null?order.vendorBasePrice:(order.baseProductTotal!=null?order.baseProductTotal:(order.subtotal!=null?order.subtotal:order.vendorAmount)))||0;
+    var product=Number(order.customerProductPrice!=null?order.customerProductPrice:(base+(Number(order.customerMarkup!=null?order.customerMarkup:order.platformCommission)||0)))||0;
+    var markup=Number(order.customerMarkup!=null?order.customerMarkup:Math.max(0,product-base))||0;
+    var delivery=Number(order.deliveryFee!=null?order.deliveryFee:order.deliveryCharge)||0;
+    var platform=Number(order.platformFee)||0;
+    var total=zorraCustomerFinalTotal(order),km=Number(order.deliveryDistanceKm);
+    html+='<div class="order-price-breakdown"><div><span>Products</span><b>₹'+product.toLocaleString('en-IN')+'</b></div>'+(markup?'<div><span>Product markup (included)</span><b>₹'+markup.toLocaleString('en-IN')+'</b></div>':'')+'<div><span>Delivery'+(isFinite(km)&&km>0?' · '+km.toFixed(1)+' km':'')+'</span><b>₹'+delivery.toLocaleString('en-IN')+'</b></div>'+(platform?'<div><span>Platform fee</span><b>₹'+platform.toLocaleString('en-IN')+'</b></div>':'')+'<div class="final"><span>Total paid</span><b>₹'+Number(total||0).toLocaleString('en-IN')+'</b></div></div>';
+    return html;
+  };
+
+  /* Do not let an anonymous/previous-account cart survive a sign-out boundary. */
+  auth.onAuthStateChanged(function(user){
+    if(!user){_cartStorageOwner='guest';_cart=ldJ('ls_cart_guest',emptyCart());}
+    document.querySelectorAll('img:not([loading])').forEach(function(img){img.loading='lazy';img.decoding='async';});
+  });
+
+  if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./firebase-messaging-sw.js').catch(function(error){console.warn('Notification worker:',error.message);});
 })();
 </script>
 </body>
