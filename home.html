@@ -2269,8 +2269,8 @@ function saveCatalogSnapshot(){
     localStorage.setItem('ls_catalog_shops',JSON.stringify(_shops));
   }catch(e){}
 }
-function effectiveLat(){return _userLat||null;}
-function effectiveLng(){return _userLng||null;}
+function effectiveLat(){return hasDeliveryLocation()?Number(_userLat):null;}
+function effectiveLng(){return hasDeliveryLocation()?Number(_userLng):null;}
 function cleanBrokenSymbols(root){
   root=root||document.body;if(!root)return;
   var bad=/₹|₹|₹|Ã‚·|·|Ãƒâ€”|×|×|Ã¢Ë†â€™|−|→/g;
@@ -2297,9 +2297,9 @@ function cleanBrokenSymbols(root){
   var elements=root.querySelectorAll?root.querySelectorAll('[placeholder],[title],[aria-label]'):[];
   elements.forEach(function(el){['placeholder','title','aria-label'].forEach(function(attr){if(el.hasAttribute(attr)){var value=el.getAttribute(attr),fixed=repair(value);if(fixed!==value)el.setAttribute(attr,fixed);}});});
 }
-var _userLat=parseFloat(ld('ls_lat'))||null,_userLng=parseFloat(ld('ls_lng'))||null;
+var _userLat=ld('ls_lat')===''?null:Number(ld('ls_lat')),_userLng=ld('ls_lng')===''?null:Number(ld('ls_lng')); 
 var _pendingOrder=null;
-var mainMap=null,mainMarker=null,mainCircle=null,mainMapInit=false,mainPendingLocation=null,mainLocationResults=[],mainLocationSearchTimer=null,mainLocationSearchController=null;
+var mainMap=null,mainMarker=null,mainCircle=null,mainMapInit=false,mainPendingLocation=null,mainLocationResults=[],mainLocationSearchTimer=null,mainLocationSearchController=null,mainGpsRequest=0;
 var delMap=null,delMarker=null,delLat=null,delLng=null,delMapInit=false;
 var trackMap=null,trackMapInit=false,trackDeliveryMarker=null,trackUserMarker=null,trackPolyline=null;
 var _trackInterval=null,_trackOrder=null,_confirmOrderId=null;
@@ -3134,6 +3134,7 @@ function productMatchesCategory(p,shop,cat){
   return !productHasCategoryData(p)&&terms.some(function(term){return productMatchesTerm(shop||{},term);});
 }
 function productMatchesActiveFilters(p,shop){
+  if(!productIsNearby(p))return false;
   var searchOk=!_searchTerm||productMatchesTerm(p,_searchTerm)||productMatchesTerm(shop||{},_searchTerm);
   var catOk=productMatchesCategory(p,shop,_activeCategory);
   var subOk=!_activeSubCategory||productMatchesTerm(p,_activeSubCategory);
@@ -3359,8 +3360,8 @@ document.addEventListener('keydown',function(e){
 function renderDropdown(term){
   var dd=document.getElementById('search-dropdown');if(!dd)return;
   if(!term){dd.classList.remove('show');return;}
-  var mP=_products.filter(function(p){return p.name.toLowerCase().indexOf(term)!==-1||(p.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,6);
-  var mS=_shops.filter(function(s){return s.name.toLowerCase().indexOf(term)!==-1||(s.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,4);
+  var mP=_products.filter(productIsNearby).filter(function(p){return p.name.toLowerCase().indexOf(term)!==-1||(p.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,6);
+  var mS=_shops.filter(shopIsNearby).filter(function(s){return s.name.toLowerCase().indexOf(term)!==-1||(s.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,4);
   if(!mP.length&&!mS.length){dd.innerHTML='<div class="sd-no-results">'+t('search_no_results')+' "'+term+'"</div>';dd.classList.add('show');return;}
   var html='';
   if(mP.length){html+='<div class="sd-section-lbl">'+t('sd_products')+'</div>';html+=mP.map(function(p){var shop=_shops.find(function(s){return s.id===p.shopId;});return'<a class="sd-item" href="product.html?id='+p.id+'" onclick="goToProductPage(\''+p.id+'\');return false">'+(p.image?'<img class="sd-item-img" src="'+p.image+'">':'<div class="sd-item-img">'+prodIco(p.category)+'</div>')+'<div class="sd-item-info"><div class="sd-item-name">'+eh(p.name)+'</div><div class="sd-item-sub">'+(shop?eh(shop.name):eh(p.category||t('new_arrival')))+'</div></div><div class="sd-item-price">₹'+p.price+'</div></a>';}).join('');}
@@ -3372,8 +3373,8 @@ function renderDropdown(term){
 function renderDropdown(term){
   var dd=document.getElementById('search-dropdown');if(!dd)return;
   term=String(term||'').trim().toLowerCase();if(!term){dd.classList.remove('show');return;}
-  var mP=_products.filter(function(p){return String(p.name||'').toLowerCase().indexOf(term)!==-1||String(p.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,6);
-  var mS=_shops.filter(function(s){return String(s.name||'').toLowerCase().indexOf(term)!==-1||String(s.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,4);
+  var mP=_products.filter(productIsNearby).filter(function(p){return String(p.name||'').toLowerCase().indexOf(term)!==-1||String(p.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,6);
+  var mS=_shops.filter(shopIsNearby).filter(function(s){return String(s.name||'').toLowerCase().indexOf(term)!==-1||String(s.category||'').toLowerCase().indexOf(term)!==-1;}).slice(0,4);
   if(!mP.length&&!mS.length){dd.innerHTML='<div class="sd-no-results">'+t('search_no_results')+' &quot;'+eh(term)+'&quot;</div>';dd.classList.add('show');return;}
   var html='';
   if(mP.length){html+='<div class="sd-section-lbl">'+t('sd_products')+'</div>';html+=mP.map(function(p){var shop=_shops.find(function(s){return s.id===p.shopId;}),pid=safeId(p.id);return'<a class="sd-item" href="product.html?id='+pid+'" onclick="goToProductPage(decodeURIComponent(\''+pid+'\'));return false">'+(p.image?'<img class="sd-item-img" src="'+eh(p.image)+'" alt="">':'<div class="sd-item-img">'+prodIco(p.category)+'</div>')+'<div class="sd-item-info"><div class="sd-item-name">'+eh(p.name||'Product')+'</div><div class="sd-item-sub">'+(shop?eh(shop.name):eh(p.category||t('new_arrival')))+'</div></div><div class="sd-item-price">Rs. '+(Number(p.price)||0)+'</div></a>';}).join('');}
@@ -3393,12 +3394,16 @@ function filterByShopCategory(cat,directToProducts){
   renderNewProducts();
   if(directToProducts||_activeCategory)showProductResults();
 }
+function validCoordinates(lat,lng){return lat!==null&&lng!==null&&lat!==undefined&&lng!==undefined&&String(lat).trim()!==''&&String(lng).trim()!==''&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lng))&&Math.abs(Number(lat))<=90&&Math.abs(Number(lng))<=180;}
+function hasDeliveryLocation(){return validCoordinates(_userLat,_userLng);}
+function shopIsNearby(shop){return hasDeliveryLocation()&&!!shop&&validCoordinates(shop.lat,shop.lng)&&haversine(Number(_userLat),Number(_userLng),Number(shop.lat),Number(shop.lng))<=7;}
+function productIsNearby(product){return _shops.some(function(shop){return shop.id===product.shopId&&shopIsNearby(shop);});}
 function getVisibleNearbyShops(){
-  var list=_shops.slice();
+  var list=_shops.filter(shopIsNearby);
   if(_searchTerm){list=list.filter(function(s){var sm=productMatchesTerm(s,_searchTerm);var pm=_products.some(function(p){return p.shopId===s.id&&productMatchesTerm(p,_searchTerm);});return sm||pm;});}
   if(_activeCategory||_activeSubCategory){list=list.filter(function(s){return _products.some(function(p){return p.shopId===s.id&&productMatchesActiveFilters(p,s);});});}
   var lat=effectiveLat(),lng=effectiveLng();
-  if(!lat||!lng)return list.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+  if(!hasDeliveryLocation())return [];
   return list.map(function(s){return Object.assign({},s,{dist:haversine(lat,lng,s.lat,s.lng)});}).filter(function(s){return s.dist<=7;}).sort(function(a,b){return a.dist-b.dist;});
 }
 var _shopView='list',shopsMap=null,shopsMapLayer=null,shopsUserMarker=null;
@@ -3432,13 +3437,13 @@ function makeShopMarkerIcon(kind){
 }
 function ensureShopMap(){
   if(shopsMap||typeof L==='undefined')return;
-  shopsMap=L.map('shops-map',{zoomControl:true,attributionControl:false}).setView([_userLat||11.0168,_userLng||76.9558],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(shopsMap);
+  shopsMap=L.map('shops-map',{zoomControl:true,attributionControl:true}).setView([_userLat||11.0168,_userLng||76.9558],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(shopsMap);
   shopsMapLayer=L.layerGroup().addTo(shopsMap);
 }
 function updateShopMap(list){
   var panel=document.getElementById('shop-map-panel');
-  if(!panel||_shopView!=='map'||!_userLat||!_userLng)return;
+  if(!panel||_shopView!=='map'||!hasDeliveryLocation())return;
   ensureShopMap();if(!shopsMap||!shopsMapLayer)return;
   shopsMapLayer.clearLayers();
   shopsUserMarker=L.marker([_userLat,_userLng],{icon:makeShopMarkerIcon('user')}).addTo(shopsMapLayer).bindPopup('<b>Your location</b>');
@@ -3447,7 +3452,7 @@ function updateShopMap(list){
     var lat=parseFloat(s.lat),lng=parseFloat(s.lng),pc=s.productCount||0;
     bounds.extend([lat,lng]);
     var marker=L.marker([lat,lng],{icon:makeShopMarkerIcon('shop'),title:s.name||'Shop'}).addTo(shopsMapLayer).bindPopup(
-      '<div style="min-width:190px"><b>'+eh(s.name||'Shop')+'</b><br><span style="color:#6F637A">'+eh(s.category||t('shop_chip'))+'</span><br><span style="font-weight:800;color:#F33520">'+(s.dist?s.dist.toFixed(1)+' km away':'Nearby')+'</span><br><button type="button" onclick="goToShopPage('+JSON.stringify(String(s.id))+')" style="display:inline-flex;margin-top:9px;border:1px solid #FFCC20;border-radius:999px;background:#F33520;color:#fff;font-weight:900;padding:8px 12px;cursor:pointer">Choose this shop</button></div>'
+      '<div style="min-width:190px"><b>'+eh(s.name||'Shop')+'</b><br><span style="color:#6F637A">'+eh(s.category||t('shop_chip'))+'</span><br><span style="font-weight:800;color:#F33520">'+(s.dist?s.dist.toFixed(1)+' km away':'Nearby')+'</span><br><button type="button" onclick="goToShopPage('+eh(JSON.stringify(String(s.id)))+')" style="display:inline-flex;margin-top:9px;border:1px solid #FFCC20;border-radius:999px;background:#F33520;color:#fff;font-weight:900;padding:8px 12px;cursor:pointer">Choose this shop</button></div>'
     );
     marker.on('click',function(){this.openPopup();});
   });
@@ -3460,7 +3465,7 @@ function renderShops(){
   var grid=document.getElementById('stores-grid'),empty=document.getElementById('stores-empty'),note=document.getElementById('nearby-note'),resetB=document.getElementById('reset-btn'),lbl=document.getElementById('stores-lbl'),productsPanel=document.getElementById('shop-products-panel');
   var emptyTitle=document.getElementById('stores-empty-title'),emptySub=document.getElementById('stores-empty-sub'),emptyLink=document.getElementById('stores-empty-link'),resetTxt=document.getElementById('reset-btn-txt');
   var hasFilters=!!(_searchTerm||_activeCategory);
-  if((!_userLat||!_userLng)&&!_usingSampleData&&!hasFilters){
+  if(!hasDeliveryLocation()){
     grid.classList.remove('single-store');
     lbl.textContent=t('stores_nearby');
     note.style.display='none';
@@ -3514,7 +3519,7 @@ function renderShops(){
 }
 function getNewestVendorProducts(){
   var seen={};
-  return _products.slice().sort(function(a,b){
+  return _products.filter(productIsNearby).sort(function(a,b){
     return tsVal(b.createdAt||b.addedAt||b.updatedAt)-tsVal(a.createdAt||a.addedAt||a.updatedAt);
   }).filter(function(p){
     if(!p.shopId||seen[p.shopId])return false;
@@ -3527,13 +3532,13 @@ function renderNewProducts(){
   var countEl=document.getElementById('all-products-count'),titleEl=document.getElementById('new-sec-title');
   if(!sec||!grid||!empty)return;
   sec.style.display='block';
-  var items=_products.slice().filter(function(p){
+  var items=_products.filter(productIsNearby).filter(function(p){
     var shop=_shops.find(function(s){return s.id===p.shopId;})||{};
     return productMatchesActiveFilters(p,shop);
   }).sort(function(a,b){return tsVal(b.createdAt||b.addedAt||b.updatedAt)-tsVal(a.createdAt||a.addedAt||a.updatedAt);}).slice(0,96);
   if(titleEl)titleEl.textContent=(_activeSubCategory||_activeCategory)?((_activeSubCategory||_activeCategory)+' Products'):'All Products';
   if(countEl)countEl.textContent=items.length+' '+itemLabel(items.length);
-  if(!items.length){grid.style.display='none';empty.style.display='block';return;}
+  if(!items.length){grid.innerHTML='';grid.style.display='none';empty.style.display='block';empty.textContent=hasDeliveryLocation()?'No matching products within 7 km. Try another category or location.':'Set your delivery location to see products within 7 km.';return;}
   grid.style.display='grid';empty.style.display='none';
   grid.innerHTML=items.map(function(p){
     var shop=_shops.find(function(s){return s.id===p.shopId;});
@@ -3625,7 +3630,7 @@ function renderNewProducts(){
   var countEl=document.getElementById('all-products-count'),titleEl=document.getElementById('new-sec-title');
   if(!sec||!grid||!empty)return;
   sec.style.display='block';
-  var items=_products.slice().filter(function(p){
+  var items=_products.filter(productIsNearby).filter(function(p){
     var shop=_shops.find(function(s){return s.id===p.shopId;})||{};
     return productMatchesActiveFilters(p,shop);
   }).sort(function(a,b){return tsVal(b.createdAt||b.addedAt||b.updatedAt)-tsVal(a.createdAt||a.addedAt||a.updatedAt);}).slice(0,96);
@@ -3704,7 +3709,7 @@ function initDelMap(){
     document.getElementById('del-map-hint').textContent='Pinned: '+delLat.toFixed(4)+', '+delLng.toFixed(4);if(window.zorraUpdateDeliveryQuote)window.zorraUpdateDeliveryQuote();
     fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+delLat+'&lon='+delLng).then(function(r){return r.json();}).then(function(data){var a=data.address||{};if(!document.getElementById('del-city').value)document.getElementById('del-city').value=a.city||a.town||a.village||'';if(!document.getElementById('del-pin').value)document.getElementById('del-pin').value=a.postcode||'';if(!document.getElementById('del-addr1').value)document.getElementById('del-addr1').value=a.road||a.suburb||'';}).catch(function(){});
   });
-  if(_userLat&&_userLng){delLat=_userLat;delLng=_userLng;delMarker=L.marker([delLat,delLng],{icon:delIcon}).addTo(delMap).bindPopup('Delivery here').openPopup();document.getElementById('del-map-hint').textContent='Pinned: '+delLat.toFixed(4)+', '+delLng.toFixed(4);if(window.zorraUpdateDeliveryQuote)window.zorraUpdateDeliveryQuote();}
+  if(hasDeliveryLocation()){delLat=_userLat;delLng=_userLng;delMarker=L.marker([delLat,delLng],{icon:delIcon}).addTo(delMap).bindPopup('Delivery here').openPopup();document.getElementById('del-map-hint').textContent='Pinned: '+delLat.toFixed(4)+', '+delLng.toFixed(4);if(window.zorraUpdateDeliveryQuote)window.zorraUpdateDeliveryQuote();}
 }
 function detectDeliveryLoc(){
   if(!navigator.geolocation){toast('Geolocation not supported','err');return;}
@@ -4020,49 +4025,26 @@ async function saveProfile(){var name=document.getElementById('edit-name').value
 
 // ====== LOCATION MAP ======
 function makeOrangeIcon(){return L.divIcon({className:'',html:'<div style="width:16px;height:16px;background:#FF6B1A;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 10px rgba(255,107,26,.55)"></div>',iconSize:[16,16],iconAnchor:[8,8],popupAnchor:[0,-12]});}
-function openMapModal(){document.getElementById('map-modal').classList.add('open');document.body.style.overflow='hidden';setTimeout(function(){if(!mainMapInit){mainMapInit=true;mainMap=L.map('loc-map').setView([11.0168,76.9558],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'Â© OSM',maxZoom:19}).addTo(mainMap);}mainMap.invalidateSize();if(!mainMarker)detectMainLoc(true);},80);}
-function closeMapModal(){document.getElementById('map-modal').classList.remove('open');document.body.style.overflow='';}
-function detectMainLoc(silent){
-  if(!navigator.geolocation){if(!silent)toast('Geolocation not supported','err');return;}
-  var btn=document.getElementById('loc-detect-btn');btn.disabled=true;btn.innerHTML='Detecting…';
-  navigator.geolocation.getCurrentPosition(function(pos){
-    var lat=pos.coords.latitude,lng=pos.coords.longitude;
-    if(mainMarker)mainMap.removeLayer(mainMarker);if(mainCircle)mainMap.removeLayer(mainCircle);
-    mainMap.flyTo([lat,lng],14,{animate:true,duration:1});
-    mainMarker=L.marker([lat,lng],{icon:makeOrangeIcon()}).addTo(mainMap).bindPopup('<b>You are here</b>').openPopup();
-    mainCircle=L.circle([lat,lng],{radius:7000,color:'#FF6B1A',weight:1.5,fillColor:'#FF6B1A',fillOpacity:.06,dashArray:'6 4'}).addTo(mainMap);
-    _userLat=lat;_userLng=lng;sv('ls_lat',''+lat);sv('ls_lng',''+lng);sv('ls_det_lat',''+lat);sv('ls_det_lng',''+lng);renderShops();
-    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng).then(function(r){return r.json();}).then(function(data){
-      var a=data.address||{};var parts=[a.road||a.suburb,a.city||a.town||a.village,a.state].filter(Boolean);
-      var dispAddr=parts.length?parts.join(', '):(lat.toFixed(4)+', '+lng.toFixed(4));
-      sv('ls_det_city',a.city||a.town||a.village||'');sv('ls_det_pin',a.postcode||'');sv('ls_detected_full',dispAddr);
-      renderShops();
-      document.getElementById('mm-addr-txt').textContent=dispAddr;document.getElementById('mm-addr').classList.add('show');
-      document.getElementById('loc-btn-txt').textContent=a.city||a.town||a.village||t('location_set');
-      document.getElementById('lp-addr').textContent=dispAddr;document.getElementById('lp-coords').textContent='Lat '+lat.toFixed(5)+'  ·  Lng '+lng.toFixed(5);
-      document.getElementById('loc-pill').classList.add('show');document.getElementById('search-inp').placeholder=t('search_placeholder');
-      btn.disabled=false;btn.innerHTML=t('location_set');
-    }).catch(function(){document.getElementById('loc-btn-txt').textContent=t('location_set');document.getElementById('loc-pill').classList.add('show');btn.disabled=false;btn.innerHTML=t('location_set');});
-  },function(err){btn.disabled=false;btn.innerHTML=t('location');if(!silent)toast(['','Permission denied','Unavailable','Timed out'][err.code]||'Error','err');},{enableHighAccuracy:true,timeout:10000});
-}
 // Location picker: search, map pin, draggable marker, GPS and explicit save.
 function openMapModal(){
+  if(typeof L==='undefined'){toast('Map could not load. Check your connection and reload.','err');return;}
+  mainPendingLocation=null;document.getElementById('loc-set-btn').disabled=true;document.getElementById('mm-addr').classList.remove('show');
   document.getElementById('map-modal').classList.add('open');document.body.style.overflow='hidden';
   setTimeout(function(){
     if(!mainMapInit){
-      mainMapInit=true;mainMap=L.map('loc-map').setView([_userLat||11.0168,_userLng||76.9558],_userLat?15:12);
+      mainMapInit=true;mainMap=L.map('loc-map').setView([hasDeliveryLocation()?Number(_userLat):11.0168,hasDeliveryLocation()?Number(_userLng):76.9558],hasDeliveryLocation()?15:12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mainMap);
       mainMap.on('click',function(e){previewMainLocation(e.latlng.lat,e.latlng.lng,'Selected pin');reverseMainLocation(e.latlng.lat,e.latlng.lng);});
     }
     mainMap.invalidateSize();
-    if(_userLat&&_userLng){previewMainLocation(_userLat,_userLng,ld('ls_detected_full')||'Saved location',ld('ls_det_city'),ld('ls_det_pin'));mainMap.setView([_userLat,_userLng],15);}
+    if(hasDeliveryLocation()){previewMainLocation(_userLat,_userLng,ld('ls_detected_full')||'Saved location',ld('ls_det_city'),ld('ls_det_pin'));mainMap.setView([_userLat,_userLng],15);}
     setTimeout(function(){var input=document.getElementById('loc-search-input');if(input)input.focus();},100);
   },80);
 }
-function closeMapModal(){document.getElementById('map-modal').classList.remove('open');document.body.style.overflow='';hideLocationResults();if(mainLocationSearchController)mainLocationSearchController.abort();}
+function closeMapModal(){mainGpsRequest++;clearTimeout(mainLocationSearchTimer);mainPendingLocation=null;document.getElementById('map-modal').classList.remove('open');document.body.style.overflow='';hideLocationResults();if(mainLocationSearchController)mainLocationSearchController.abort();}
 function locationAddressParts(address,displayName){address=address||{};var city=address.city||address.town||address.village||address.county||'';var parts=[address.road||address.neighbourhood||address.suburb,city,address.state].filter(Boolean);return{address:parts.length?parts.join(', '):(displayName||''),city:city,pin:address.postcode||''};}
 function previewMainLocation(lat,lng,address,city,pin){
-  lat=Number(lat);lng=Number(lng);if(!isFinite(lat)||!isFinite(lng)||!mainMap)return;
+  if(!validCoordinates(lat,lng)||!mainMap)return;lat=Number(lat);lng=Number(lng);mainGpsRequest++;
   if(mainMarker)mainMap.removeLayer(mainMarker);if(mainCircle)mainMap.removeLayer(mainCircle);
   mainMarker=L.marker([lat,lng],{icon:makeOrangeIcon(),draggable:true}).addTo(mainMap).bindPopup('<b>Delivery location</b>').openPopup();
   mainMarker.on('dragend',function(e){var p=e.target.getLatLng();previewMainLocation(p.lat,p.lng,'Selected pin');reverseMainLocation(p.lat,p.lng);});
@@ -4076,7 +4058,7 @@ function reverseMainLocation(lat,lng){
     .then(function(data){var p=locationAddressParts(data.address,data.display_name);if(mainPendingLocation&&Math.abs(mainPendingLocation.lat-lat)<.00001&&Math.abs(mainPendingLocation.lng-lng)<.00001){mainPendingLocation.address=p.address||mainPendingLocation.address;mainPendingLocation.city=p.city;mainPendingLocation.pin=p.pin;document.getElementById('mm-addr-txt').textContent=mainPendingLocation.address;}})
     .catch(function(){});
 }
-function queueLocationSearch(){clearTimeout(mainLocationSearchTimer);var query=(document.getElementById('loc-search-input').value||'').trim();if(query.length<3){hideLocationResults();return;}mainLocationSearchTimer=setTimeout(function(){searchMainLocation();},450);}
+function queueLocationSearch(){if(mainLocationSearchController)mainLocationSearchController.abort();hideLocationResults();}
 function searchMainLocation(event){
   if(event)event.preventDefault();var input=document.getElementById('loc-search-input'),query=(input.value||'').trim(),button=document.getElementById('loc-search-btn'),results=document.getElementById('loc-search-results');
   if(query.length<3){toast('Enter at least 3 characters to search','err');input.focus();return false;}
@@ -4095,15 +4077,23 @@ function renderLocationResults(){
 function chooseLocationResult(index){var item=mainLocationResults[index];if(!item)return;var lat=Number(item.lat),lng=Number(item.lon),p=locationAddressParts(item.address,item.display_name);previewMainLocation(lat,lng,p.address||item.display_name,p.city,p.pin);mainMap.flyTo([lat,lng],16,{animate:true,duration:.8});document.getElementById('loc-search-input').value=item.display_name||p.address;hideLocationResults();}
 function hideLocationResults(){var results=document.getElementById('loc-search-results');if(results)results.classList.remove('show');}
 function commitMainLocation(){
-  if(!mainPendingLocation){toast('Search for a place or tap the map first','err');return;}
+  if(!mainPendingLocation||!validCoordinates(mainPendingLocation.lat,mainPendingLocation.lng)){toast('Search for a place or tap the map first','err');return;}
   var loc=mainPendingLocation;_userLat=loc.lat;_userLng=loc.lng;sv('ls_lat',''+loc.lat);sv('ls_lng',''+loc.lng);sv('ls_det_lat',''+loc.lat);sv('ls_det_lng',''+loc.lng);sv('ls_det_city',loc.city);sv('ls_det_pin',loc.pin);sv('ls_detected_full',loc.address);
   document.getElementById('loc-btn-txt').textContent=loc.city||t('location_set');document.getElementById('lp-addr').textContent=loc.address;document.getElementById('lp-coords').textContent='Lat '+loc.lat.toFixed(5)+' · Lng '+loc.lng.toFixed(5);document.getElementById('loc-pill').classList.add('show');document.getElementById('search-inp').placeholder=t('search_placeholder');
-  renderShops();if(_shopView==='map')renderShopsMap();closeMapModal();toast('Delivery location set');
+  renderShops();renderNewProducts();closeDropdown();closeMapModal();toast('Delivery location set — showing shops and products within 7 km');
 }
 function detectMainLoc(silent){
-  if(!navigator.geolocation){if(!silent)toast('Geolocation not supported','err');return;}
-  var btn=document.getElementById('loc-detect-btn');btn.disabled=true;btn.textContent='Detecting...';
-  navigator.geolocation.getCurrentPosition(function(pos){var lat=pos.coords.latitude,lng=pos.coords.longitude;mainMap.flyTo([lat,lng],15,{animate:true,duration:1});previewMainLocation(lat,lng,'Current GPS location');reverseMainLocation(lat,lng);btn.disabled=false;btn.textContent='Use GPS';},function(err){btn.disabled=false;btn.textContent='Use GPS';if(!silent)toast(['','Permission denied','Location unavailable','Location request timed out'][err.code]||'Location error','err');},{enableHighAccuracy:true,timeout:10000});
+  if(!mainMap){if(!silent)toast('Open the map before using GPS.','err');return;}
+  if(!window.isSecureContext){toast('GPS needs HTTPS or localhost. Search for your address or tap the map.','err');return;}
+  if(!navigator.geolocation){toast('GPS is unavailable. Search or tap the map.','err');return;}
+  var request=++mainGpsRequest,btn=document.getElementById('loc-detect-btn');btn.disabled=true;btn.textContent='Detecting...';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    btn.disabled=false;btn.textContent='Use GPS';if(request!==mainGpsRequest)return;
+    var lat=pos.coords.latitude,lng=pos.coords.longitude;
+    if(!validCoordinates(lat,lng)){toast('Invalid GPS result. Please select a map pin.','err');return;}
+    mainMap.setView([lat,lng],16);previewMainLocation(lat,lng,'GPS pin (accuracy about '+Math.round(pos.coords.accuracy)+' m). Check the pin before saving.');reverseMainLocation(lat,lng);
+    if(pos.coords.accuracy>200)toast('GPS accuracy is low. Move the pin to your delivery address.','info');
+  },function(err){btn.disabled=false;btn.textContent='Use GPS';if(request!==mainGpsRequest)return;if(!silent)toast(({1:'Allow location access in your browser, or search for your address.',2:'GPS unavailable. Search or tap the map.',3:'GPS timed out. Retry or select a map pin.'})[err.code]||'Location error','err');},{enableHighAccuracy:true,maximumAge:0,timeout:15000});
 }
 function dismissLoc(){document.getElementById('loc-pill').classList.remove('show');document.getElementById('loc-btn-txt').textContent=t('location_add');document.getElementById('search-inp').placeholder=t('search_placeholder');}
 
@@ -4116,7 +4106,7 @@ window.addEventListener('load',function(){
   loadCurrentUser();updateNavBadges();
   _cartRequested=new URLSearchParams(window.location.search).get('cart')==='1';
   updateCartUI();
-  if(_userLat&&_userLng){document.getElementById('loc-btn-txt').textContent=ld('ls_det_city')||t('location_set');document.getElementById('lp-addr').textContent=ld('ls_detected_full')||'Location saved';document.getElementById('lp-coords').textContent='Lat '+_userLat.toFixed(5)+'  ·  Lng '+_userLng.toFixed(5);document.getElementById('loc-pill').classList.add('show');}
+  if(hasDeliveryLocation()){document.getElementById('loc-btn-txt').textContent=ld('ls_det_city')||t('location_set');document.getElementById('lp-addr').textContent=ld('ls_detected_full')||'Location saved';document.getElementById('lp-coords').textContent='Lat '+_userLat.toFixed(5)+'  ·  Lng '+_userLng.toFixed(5);document.getElementById('loc-pill').classList.add('show');}
   startNotifListener();
   initRewards();
   startBannerListener();
@@ -4435,7 +4425,7 @@ body.theme-dark .kids-mode-card,body.theme-dark .recent-search-section{backgroun
   window.renderRecentSearchProducts=function(){
     ensureRecentSection();var section=document.getElementById('recent-search-section'),grid=document.getElementById('recent-search-grid'),context=document.getElementById('recent-search-context');if(!section||!grid)return;
     var terms=recentSearches();if(!terms.length||!window._products||!_products.length){section.classList.remove('show');return;}
-    var ranked=_products.map(function(p){var text=productText(p),score=0;terms.forEach(function(term,index){if(text.indexOf(term)>-1)score+=10-index;var words=term.split(/\s+/);words.forEach(function(word){if(word.length>2&&text.indexOf(word)>-1)score+=2;});});return {p:p,score:score};}).filter(function(x){return x.score>0&&(!kidsModeOn()||isKidsZeroToFive(x.p));}).sort(function(a,b){return b.score-a.score;}).slice(0,10);
+    var ranked=_products.filter(productIsNearby).map(function(p){var text=productText(p),score=0;terms.forEach(function(term,index){if(text.indexOf(term)>-1)score+=10-index;var words=term.split(/\s+/);words.forEach(function(word){if(word.length>2&&text.indexOf(word)>-1)score+=2;});});return {p:p,score:score};}).filter(function(x){return x.score>0&&(!kidsModeOn()||isKidsZeroToFive(x.p));}).sort(function(a,b){return b.score-a.score;}).slice(0,10);
     if(!ranked.length){section.classList.remove('show');return;}section.classList.add('show');context.textContent='Inspired by: '+terms.slice(0,3).join(', ');grid.innerHTML=ranked.map(function(x){var p=x.p,shop=_shops.find(function(s){return s.id===p.shopId;})||{};return productCardHtml(p,shop);}).join('');if(typeof cleanBrokenSymbols==='function')cleanBrokenSymbols(section);
   };
   var originalRender=window.renderNewProducts;
@@ -4547,9 +4537,9 @@ body.category-drawer-open .category-subfilters.zorra-centered-category{display:b
 :root{--zr-navy:#071B3A;--zr-navy-2:#0B1F3A;--zr-red:#FF3326;--zr-bg:#F7F7F5;--zr-border:#E9E9E9;--zr-muted:#6B7280;--zr-shadow:0 8px 26px rgba(7,27,58,.07)}
 html,body{max-width:100%;overflow-x:hidden}.customer-home{background:var(--zr-bg)!important;color:#151922!important;padding-bottom:104px!important}.page{display:block!important;width:min(1280px,100%)!important;max-width:1280px!important;margin:0 auto!important;padding:18px 20px 48px!important}.page>*{grid-column:auto!important}.nav-float-wrap{top:8px!important;width:calc(100% - 20px)!important;max-width:1280px!important}.nav-float-wrap nav{min-height:58px!important;padding:7px 10px!important;border:1px solid rgba(255,255,255,.11)!important;border-radius:18px!important;background:var(--zr-navy)!important;box-shadow:0 12px 32px rgba(7,27,58,.22)!important}.nav-logo{height:44px!important;background:transparent!important;border:0!important}.nav-logo-word,.nav-rewards-link,.nav-links a{color:#fff!important}.nav-divider-v{background:rgba(255,255,255,.16)!important}.notif-btn,.nav-profile-btn{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.13)!important;color:#fff!important}.nav-cart-btn{background:var(--zr-red)!important;border:0!important}.customer-home .settings-btn{background:rgba(255,255,255,.09)!important;color:#fff!important}
 .search-bar{position:relative!important;top:auto!important;margin-top:4px!important;padding:12px 16px 4px!important;background:transparent!important;border:0!important}.search-bar .search-wrap{max-width:900px!important}.search-bar .search-row{display:grid!important;grid-template-columns:200px minmax(0,1fr)!important;gap:10px!important}.search-bar .loc-btn{width:100%!important;min-width:0!important;min-height:48px!important;justify-content:flex-start!important;gap:8px!important;padding:0 15px!important;border:1px solid var(--zr-border)!important;border-radius:15px!important;background:#fff!important;color:var(--zr-navy)!important;box-shadow:0 4px 16px rgba(7,27,58,.055)!important}.search-bar .loc-btn #loc-btn-txt{display:inline!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.search-bar .search-box{position:relative!important;min-height:48px!important;border:1px solid var(--zr-border)!important;border-radius:15px!important;background:#fff!important;box-shadow:0 4px 16px rgba(7,27,58,.055)!important}.search-bar .search-box::before{content:'';flex:0 0 18px;width:18px;height:18px;margin:auto 0 auto 15px;border:2px solid #87909e;border-radius:50%;box-sizing:border-box}.search-bar .search-box::after{content:'';position:absolute;left:30px;top:28px;width:7px;height:2px;background:#87909e;transform:rotate(45deg);border-radius:2px}.search-bar .search-box input{padding:11px 10px!important;font-size:.83rem!important}.search-bar .search-box button{min-width:84px!important;background:var(--zr-red)!important;border:0!important;color:#fff!important;font-weight:800!important}.loc-pill{border-color:var(--zr-border)!important;background:#fff!important;box-shadow:var(--zr-shadow)!important}
-.cats-section{position:relative!important;top:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0 0 20px!important;padding:18px!important;border:1px solid var(--zr-border)!important;border-radius:21px!important;background:#fff!important;box-shadow:0 5px 20px rgba(7,27,58,.045)!important;overflow:hidden!important}.cats-section::after,.cats-section::before{display:none!important}.cats-header{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;margin-bottom:14px!important}.cats-heading{display:block!important}.cats-subtext{margin-top:5px!important;color:var(--zr-muted)!important;font-size:.76rem!important}.cats-tip,.cats-list-control,.cats-tabs{display:none!important}.cats-scroller{display:flex!important;grid-template-columns:none!important;gap:18px!important;width:100%!important;padding:2px 2px 6px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x proximity!important;scrollbar-width:none!important}.cats-scroller::-webkit-scrollbar{display:none!important}.cats-scroller .cat-card{display:flex!important;flex:0 0 104px!important;min-width:104px!important;min-height:0!important;flex-direction:column!important;align-items:center!important;gap:9px!important;padding:7px 5px 8px!important;border:0!important;border-radius:16px!important;background:transparent!important;box-shadow:none!important;scroll-snap-align:start!important;transition:transform .18s ease,background-color .18s ease!important}.cats-scroller .cat-card:hover{transform:translateY(-3px)!important;background:#fff7f6!important}.cats-scroller .cat-card:active{transform:scale(.96)!important}.cats-scroller .cat-icon-wrap{width:72px!important;height:72px!important;min-height:72px!important;margin:0!important;padding:7px!important;border:1px solid #edf0f3!important;border-radius:50%!important;background:#f8f9fb!important;box-shadow:0 5px 14px rgba(7,27,58,.07)!important}.cats-scroller .cat-icon-wrap img{display:block!important;width:100%!important;height:100%!important;border-radius:50%!important;object-fit:cover!important}.cats-scroller .cat-content{padding:0!important;text-align:center!important}.cats-scroller .cat-label{display:block!important;color:#222733!important;font-size:.72rem!important;font-weight:750!important;line-height:1.25!important;white-space:normal!important}.cats-scroller .cat-bar{display:none!important}
+.cats-section{position:relative!important;top:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0 0 20px!important;padding:18px!important;border:1px solid var(--zr-border)!important;border-radius:21px!important;background:#fff!important;box-shadow:0 5px 20px rgba(7,27,58,.045)!important;overflow:hidden!important}.cats-section::after,.cats-section::before{display:none!important}.cats-header{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;margin-bottom:14px!important}.cats-heading{display:block!important;width:100%!important;text-align:center!important}.cats-subtext{margin-top:5px!important;color:var(--zr-muted)!important;font-size:.76rem!important}.cats-tip,.cats-list-control,.cats-tabs{display:none!important}.cats-scroller{display:flex!important;grid-template-columns:none!important;gap:18px!important;width:100%!important;padding:2px 2px 6px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x proximity!important;scrollbar-width:none!important}.cats-scroller::-webkit-scrollbar{display:none!important}.cats-scroller .cat-card{display:flex!important;flex:0 0 104px!important;min-width:104px!important;min-height:0!important;flex-direction:column!important;align-items:center!important;gap:9px!important;padding:7px 5px 8px!important;border:0!important;border-radius:16px!important;background:transparent!important;box-shadow:none!important;scroll-snap-align:start!important;transition:transform .18s ease,background-color .18s ease!important}.cats-scroller .cat-card:hover{transform:translateY(-3px)!important;background:#fff7f6!important}.cats-scroller .cat-card:active{transform:scale(.96)!important}.cats-scroller .cat-icon-wrap{width:72px!important;height:72px!important;min-height:72px!important;margin:0!important;padding:7px!important;border:1px solid #edf0f3!important;border-radius:50%!important;background:#f8f9fb!important;box-shadow:0 5px 14px rgba(7,27,58,.07)!important}.cats-scroller .cat-icon-wrap img{display:block!important;width:100%!important;height:100%!important;border-radius:50%!important;object-fit:cover!important}.cats-scroller .cat-content{padding:0!important;text-align:center!important}.cats-scroller .cat-label{display:block!important;color:#222733!important;font-size:.72rem!important;font-weight:750!important;line-height:1.25!important;white-space:normal!important}.cats-scroller .cat-bar{display:none!important}
 .rewards-widget{margin:0 0 20px!important;padding:21px 22px!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:23px!important;background:linear-gradient(130deg,var(--zr-navy) 0%,#0b2346 72%,#2b1018 100%)!important;box-shadow:0 16px 38px rgba(7,27,58,.17)!important}.rw-title{font-size:1.35rem!important;font-weight:850!important}.rw-sub{font-size:.77rem!important}.rw-progress{height:8px!important}.rw-progress-fill{background:var(--zr-red)!important;box-shadow:none!important}.rw-chip{border:1px solid rgba(255,255,255,.09)!important;background:rgba(255,255,255,.07)!important}.rw-btn{background:var(--zr-red)!important;border-radius:10px!important;transition:transform .18s ease,background-color .18s ease!important}.rw-btn:hover{background:#df281e!important;transform:translateY(-2px)!important}
-.advertisement-panel{width:100%!important;margin-bottom:22px!important}.advertisement-heading{margin-bottom:12px!important}.advertisement-heading h2{font-size:1.35rem!important}.advertisement-heading span{color:var(--zr-red)!important}.advertisement-panel .banner-gallery{display:flex!important;gap:14px!important;width:100%!important;padding:0 0 8px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;scrollbar-width:thin!important;background:transparent!important;box-shadow:none!important}.advertisement-panel .bg-slides{display:flex!important;gap:14px!important;width:100%!important}.advertisement-panel .bg-slide{position:relative!important;display:block!important;flex:0 0 min(720px,88vw)!important;opacity:1!important;visibility:visible!important;scroll-snap-align:start!important}.advertisement-panel .bg-slide-inner,.advertisement-panel .bg-slide-img,.advertisement-panel .bg-slide-vid{height:clamp(210px,28vw,350px)!important;min-height:210px!important;border-radius:18px!important}.advertisement-panel .bg-dots,.advertisement-panel .bg-counter,.advertisement-panel .bg-prev,.advertisement-panel .bg-next{display:none!important}
+.advertisement-panel{width:100%!important;margin-bottom:22px!important}.advertisement-heading{margin-bottom:12px!important}.advertisement-heading h2{font-size:1.35rem!important}.advertisement-heading span{color:var(--zr-red)!important}.advertisement-panel .banner-gallery{display:flex!important;gap:14px!important;width:100%!important;padding:0 0 8px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;scrollbar-width:thin!important;background:transparent!important;box-shadow:none!important}.advertisement-panel .bg-slides{display:flex!important;gap:14px!important;width:100%!important}.advertisement-panel .bg-slide{position:relative!important;display:block!important;flex:0 0 100%!important;min-width:0!important;max-width:100%!important;opacity:1!important;visibility:visible!important;scroll-snap-align:start!important}.advertisement-panel .bg-slide-inner,.advertisement-panel .bg-slide-img,.advertisement-panel .bg-slide-vid{height:clamp(210px,28vw,350px)!important;min-height:210px!important;border-radius:18px!important}.advertisement-panel .bg-dots,.advertisement-panel .bg-counter,.advertisement-panel .bg-prev,.advertisement-panel .bg-next{display:none!important}
 .stores-sec,.new-products-section,.quick-category-finder,.offers-section{border:1px solid var(--zr-border)!important;border-radius:20px!important;background:#fff!important;box-shadow:0 5px 20px rgba(7,27,58,.045)!important}.sec-title{color:#151922!important;font-size:1.35rem!important}.sec-label{color:var(--zr-red)!important}.store-card,.np-card,.offer-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important}.store-card:hover,.np-card:hover,.offer-card:hover{transform:translateY(-3px)!important;box-shadow:0 12px 28px rgba(7,27,58,.09)!important}
 .mobile-nav-shortcuts.zorra-compact-bottom{position:fixed!important;left:10px!important;right:10px!important;bottom:calc(9px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:auto!important;max-width:520px!important;margin:0 auto!important;padding:7px 6px!important;gap:2px!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:25px!important;background:rgba(7,27,58,.98)!important;box-shadow:0 18px 42px rgba(7,27,58,.32)!important;backdrop-filter:blur(18px)!important;z-index:1600!important}.mobile-nav-shortcut{position:relative!important;display:flex!important;min-width:0!important;min-height:52px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;border-radius:16px!important;color:rgba(255,255,255,.76)!important;font-size:.58rem!important;font-weight:700!important;text-align:center!important;transition:color .18s ease,background-color .18s ease,transform .18s ease!important}.mobile-nav-shortcut>span:first-child{font-size:1rem!important}.mobile-nav-shortcut:hover,.mobile-nav-shortcut:focus,.mobile-nav-shortcut.active{color:#fff!important;background:rgba(255,255,255,.07)!important;transform:translateY(-2px)!important}.mobile-nav-shortcut.active::after{content:'';position:absolute;left:34%;right:34%;bottom:3px;height:3px;border-radius:3px;background:var(--zr-red)}
 @media(min-width:901px){.mobile-nav-shortcuts.zorra-compact-bottom{display:none!important}.customer-home{padding-bottom:0!important}}
