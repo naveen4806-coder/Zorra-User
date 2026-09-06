@@ -1,0 +1,2 @@
+function fullDeliveryFee(o){for(const key of ['deliveryFee','deliveryCharge','deliveryCharges']){if(o[key]!=null&&o[key]!==''&&Number.isFinite(Number(o[key]))&&Number(o[key])>=0)return Math.round(Number(o[key])*100)/100;}const km=Number(o.deliveryDistanceKm);if(o.deliveryDistanceKm!=null&&Number.isFinite(km)&&km>=0&&km<=7)return km<=2?25:km<=4?35:km<=6?50:60;return Number(o.deliveryPartnerPayout!=null?o.deliveryPartnerPayout:o.partnerEarnings)||0;}
+module.exports=fullDeliveryFee;
