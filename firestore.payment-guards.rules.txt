@@ -1,0 +1,49 @@
+// MERGE FRAGMENT ONLY. Existing rules were not supplied.
+// Do not replace your rules file with this fragment.
+// Place these functions inside match /databases/{database}/documents.
+function paymentAndFinanceUnchanged() {
+  return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+    'payment', 'refund', 'paymentMethod', 'paymentLabel', 'paymentStatus',
+    'paymentSchemaVersion', 'financials', 'razorpayPaymentId', 'razorpayOrderId',
+    'customerUid', 'shopId', 'vendorUid', 'items', 'price', 'qty',
+    'total', 'totalAmount', 'customerTotal', 'finalTotal', 'subtotal',
+    'vendorBasePrice', 'customerProductPrice', 'customerMarkup',
+    'vendorCommissionPercentage', 'vendorCommissionAmount', 'vendorEarnings',
+    'zorraCustomerRevenue', 'zorraVendorRevenue', 'zorraProductRevenue',
+    'vendorAmount', 'platformCommission', 'commissionRate', 'vendorSettlement',
+    'platformFee', 'customerTax', 'taxes', 'deliveryFee', 'deliveryCharge',
+    'deliveryCharges', 'deliveryDistanceKm', 'deliveryLat', 'deliveryLng',
+    'shopLat', 'shopLng', 'codCollectionTotal', 'deliveryPartnerPayout',
+    'partnerEarnings', 'deliveryGrossEarning', 'deliveryAdminCommission',
+    'zorraDeliveryMargin', 'deliverySalaryMonth', 'pricingVersion',
+    'baseProductTotal', 'minimumOrderValue'
+  ]);
+}
+
+// Modify EVERY existing orders create/update/delete allow expression:
+// - create: false (both COD and online order creation now use Admin SDK).
+// - delete: false (preserve historical order and payment audit records).
+// - update: (YOUR_EXISTING_ROLE_AND_TRANSITION_CHECK) && paymentAndFinanceUnchanged()
+// Preserve role-specific allowlists for delivery assignment, tracking, and
+// customer confirmation. Do not grant arbitrary status changes to customers.
+// Keep all existing order read rules.
+// Admin SDK bypasses rules; browser admin must also obey the payment guard.
+
+match /payment_attempts/{id} { allow read, write: if false; }
+match /payment_webhook_events/{id} { allow read, write: if false; }
+match /payment_rate_limits/{id} { allow read, write: if false; }
+
+// delivery_wallet_transactions: remove browser create/update/delete grants;
+// preserve existing partner/admin reads. finalizeZorraDelivery writes credits.
+// delivery_partners updates: append a guard denying changes to walletBalance,
+// totalEarnings, grossDeliveryEarnings, completedOrders, paid/withdrawn totals,
+// and every other financial field in YOUR existing schema.
+// Existing admin payout/owner-settlement functions also write these fields;
+// migrate those write paths to authorized backend functions before enforcing
+// that partner-wallet restriction. Those workflows need the actual rules/project.
+// vendor_settlements, payout requests, product/shop write rules: preserve and
+// audit owner/role checks; customers must not be able to edit trusted catalog data.
+//
+// IMPORTANT: Firestore allow rules are ORed. A new restrictive match does not
+// cancel an existing permissive or recursive wildcard allow. Remove/bound every
+// overlapping allow that would bypass these guards. Run role tests in the emulator.

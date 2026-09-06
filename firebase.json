@@ -1,0 +1,3 @@
+{
+  "functions": [{"source":"functions","codebase":"zorra-payments","ignore":["node_modules","test",".env*",".secret*","*.log"]}]
+}
